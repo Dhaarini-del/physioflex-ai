@@ -2014,12 +2014,12 @@ def _gemini_reply(prompt: str) -> Optional[str]:
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         return None
+    # Prioritize active fast production models first; avoid looping through deprecated names
+    preferred = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
     models_to_try = [
-        os.getenv("GEMINI_MODEL", "gemini-flash-latest").strip(),
-        "gemini-flash-latest",
-        "gemini-2.5-flash",
-        "gemini-pro-latest",
+        preferred,
         "gemini-1.5-flash",
+        "gemini-2.0-flash",
     ]
     models_to_try = [m for i, m in enumerate(models_to_try) if m and m not in models_to_try[:i]]
 
@@ -2027,11 +2027,11 @@ def _gemini_reply(prompt: str) -> Optional[str]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 800}
+            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 600}
         }
         req = URLRequest(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
         try:
-            with urlopen(req, timeout=14) as response:
+            with urlopen(req, timeout=5) as response:
                 data = json.loads(response.read().decode("utf-8"))
             candidate = data.get("candidates", [{}])[0]
             text = "".join(part.get("text", "") for part in candidate.get("content", {}).get("parts", [])).strip()

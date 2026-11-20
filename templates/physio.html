@@ -1,0 +1,912 @@
+{% extends "base.html" %}
+{% block title %}Physiotherapist Portal – PhysioFlex Hospital Care{% endblock %}
+
+{% block body %}
+<!-- Load Chart.js directly in body so it works regardless of base.html structure -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<div class="min-h-screen flex flex-col bg-slate-50/70">
+  <!-- Top Hospital Header -->
+  <div class="bg-gradient-to-r from-healing-700 via-teal-700 to-healing-800 text-white text-xs py-1 px-4 text-center hidden sm:flex items-center justify-center gap-2">
+    <span>✚ PhysioFlex Hospital Care Network</span>
+    <span class="opacity-75">· Department of Physical Therapy & Rehabilitation Sciences</span>
+  </div>
+
+  <nav class="glass sticky top-0 z-20 border-b border-healing-100">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-healing-500 via-teal-600 to-healing-700 flex items-center justify-center text-white font-display font-extrabold shadow-sm med-pulse">
+          🌿
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-bold text-lg text-slate-900 tracking-tight">Physio<span class="text-healing-600">Flex</span></span>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-healing-100 text-healing-800 border border-healing-200">Physiotherapist</span>
+          </div>
+          <div class="flex items-center gap-1.5 -mt-0.5">
+            <span id="liveDot" class="text-xs text-slate-400 font-medium">● connecting…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-healing-50 rounded-xl border border-healing-200/70 text-xs text-healing-800 font-bold">
+          <span>PT </span><span id="userName">Physiotherapist</span>
+        </div>
+        <button onclick="openComplaintModal()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-vital-600 hover:bg-vital-50 transition border border-vital-200/60">
+          🚨 Report
+        </button>
+        <button onclick="logout()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-6 sm:py-8">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-display font-extrabold text-slate-900">
+          Physiotherapy Clinical Workspace
+        </h1>
+        <p class="text-xs text-slate-500 mt-1">Prescribe dataset-backed exercises, track joint adherence & collaborate with physicians</p>
+      </div>
+
+      <div class="flex flex-wrap gap-2.5">
+        <button id="btnNewPlan" onclick="openPlanModal()" disabled class="btn-emerald text-xs sm:text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+          <span>+ Prescribe Rehab Plan</span>
+        </button>
+        <button onclick="openScheduleModal()" class="btn-secondary text-xs sm:text-sm">
+          <span>Schedule Patient Alert</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Toast -->
+    <div id="liveFeed" class="mb-4 hidden">
+      <div class="bg-gradient-to-r from-healing-500 to-teal-600 text-white font-semibold rounded-2xl px-5 py-3 text-sm shadow-md flex items-center gap-3" id="liveMsg">
+        🔔 Clinical update
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-12 gap-8">
+      <!-- Left Column: Patient List, Doctor Suggestions, Inbox (Col 4) -->
+      <div class="lg:col-span-4 space-y-6">
+        <!-- Patient Roster -->
+        <div class="card p-5 border-t-4 border-t-healing-500">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-display font-bold text-lg text-slate-900">Assigned Patients</h2>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-healing-50 text-healing-700 font-bold">Select to manage</span>
+          </div>
+          <div id="patientList" class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Doctor Suggestions -->
+        <div class="card p-5 border-t-4 border-t-clinical-500">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🩺</span>
+              <h2 class="font-display font-bold text-base text-slate-900">Doctor Prescriptions & Notes</h2>
+            </div>
+          </div>
+          <div id="suggestionList" class="space-y-2 text-xs sm:text-sm max-h-48 overflow-y-auto pr-1">–</div>
+        </div>
+
+        <!-- Messages Inbox -->
+        <div class="card p-5 border-t-4 border-t-teal-500">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-base">💬</span>
+              <h2 class="font-display font-bold text-base text-slate-900">All Care Team Messages</h2>
+            </div>
+          </div>
+          <div id="phyInbox" class="space-y-2 text-xs max-h-64 overflow-y-auto pr-1">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Right Column: Patient Detail, Active Plans & Sessions (Col 8) -->
+      <div class="lg:col-span-8 space-y-6">
+        <div id="detailEmpty" class="card p-16 text-center text-slate-400">
+          <div class="text-4xl mb-3">🌿</div>
+          <p class="font-bold text-slate-600 text-base">Select a patient to prescribe rehabilitation plans & review motion telemetry</p>
+          <p class="text-xs text-slate-400 mt-1">View camera workout sessions, ROM angles, doctor prescriptions and send direct exercise notes.</p>
+        </div>
+
+        <div id="detailPanel" class="hidden space-y-6">
+          <!-- Patient Summary Card -->
+          <div class="card p-6 border-t-4 border-t-healing-500">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-3">
+                  <h2 id="dName" class="text-2xl font-display font-extrabold text-slate-900"></h2>
+                  <span id="dPhysioBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold"></span>
+                </div>
+                <p id="dCondition" class="text-healing-700 font-medium text-sm mt-1"></p>
+              </div>
+              <button id="btnClaimPatient" onclick="claimCurrentPatient()" class="hidden text-xs bg-gradient-to-r from-healing-500 to-teal-600 text-white px-3.5 py-2 rounded-xl font-bold shadow-sm hover:from-healing-600 hover:to-teal-700 transition">
+                + Assign Patient to Me
+              </button>
+            </div>
+
+            <!-- Telemetry Metrics -->
+            <div class="grid grid-cols-4 gap-3 mt-5">
+              <div class="p-3 rounded-2xl bg-vital-50/60 border border-vital-100 text-center">
+                <div class="text-[11px] font-bold text-vital-700 uppercase">Pain Level</div>
+                <div id="dPain" class="font-display font-extrabold text-2xl text-vital-600 mt-0.5"></div>
+              </div>
+              <div class="p-3 rounded-2xl bg-clinical-50/60 border border-clinical-100 text-center">
+                <div class="text-[11px] font-bold text-clinical-700 uppercase">Current ROM</div>
+                <div id="dRom" class="font-display font-extrabold text-2xl text-clinical-600 mt-0.5"></div>
+              </div>
+              <div class="p-3 rounded-2xl bg-healing-50/60 border border-healing-100 text-center">
+                <div class="text-[11px] font-bold text-healing-700 uppercase">Adherence</div>
+                <div id="dAdherence" class="font-display font-extrabold text-2xl text-healing-600 mt-0.5"></div>
+              </div>
+              <div class="p-3 rounded-2xl bg-teal-50/60 border border-teal-100 text-center">
+                <div class="text-[11px] font-bold text-teal-700 uppercase">Care Status</div>
+                <div id="dStatus" class="font-display font-extrabold text-lg text-teal-700 mt-1 capitalize"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ANALYTICS: Patient Progress Charts -->
+          <div class="card p-6 border-t-4 border-t-healing-500">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-healing-100 text-healing-800 text-xs font-bold mb-1">📊 Rehab Analytics</div>
+                <h3 class="font-display font-bold text-base text-slate-900">Patient Progress Visualizations</h3>
+              </div>
+              <span class="text-xs text-slate-500">Live-synced across all portals</span>
+            </div>
+            <div class="grid lg:grid-cols-3 gap-4">
+              <div class="p-3 rounded-2xl bg-white border border-healing-100 shadow-sm flex flex-col">
+                <div class="font-bold text-xs text-slate-900 mb-1 flex items-center justify-between">
+                  <span>📈 ROM & Pain Trend</span>
+                  <span class="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full font-bold">Line</span>
+                </div>
+                <div style="position: relative; height: 190px; width: 100%;"><canvas id="phyChartRomPain"></canvas></div>
+              </div>
+              <div class="p-3 rounded-2xl bg-white border border-healing-100 shadow-sm flex flex-col">
+                <div class="font-bold text-xs text-slate-900 mb-1 flex items-center justify-between">
+                  <span>📊 Reps Compliance</span>
+                  <span class="text-[10px] text-clinical-700 bg-clinical-50 px-2 py-0.5 rounded-full font-bold">Bar</span>
+                </div>
+                <div style="position: relative; height: 190px; width: 100%;"><canvas id="phyChartReps"></canvas></div>
+              </div>
+              <div class="p-3 rounded-2xl bg-white border border-healing-100 shadow-sm flex flex-col">
+                <div class="font-bold text-xs text-slate-900 mb-1 flex items-center justify-between">
+                  <span>🎯 Movement Quality</span>
+                  <span class="text-[10px] text-healing-700 bg-healing-50 px-2 py-0.5 rounded-full font-bold">Pie</span>
+                </div>
+                <div style="position: relative; height: 190px; width: 100%;" class="flex items-center justify-center"><canvas id="phyChartQuality"></canvas></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct Patient Messaging -->
+          <div class="card p-6 border-t-4 border-t-teal-500">
+            <h3 class="font-display font-bold text-base text-slate-900 mb-2">Message Patient</h3>
+            <div class="flex gap-2">
+              <input id="phyMsgInput" class="input flex-1" placeholder="Type exercise advice or clinical reminder…" />
+              <button onclick="sendPhyMsg()" class="btn-primary shrink-0">Send Instruction</button>
+            </div>
+            <p id="phyMsgStatus" class="text-xs text-slate-400 mt-1"></p>
+            <div id="phyPatientMsgs" class="mt-4 space-y-2 text-xs max-h-48 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- Active Rehab Plans -->
+          <div class="card p-6 border-t-4 border-t-healing-500">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-display font-bold text-base text-slate-900">Active Rehabilitation Plans</h3>
+              <button onclick="openPlanModal()" class="text-xs font-bold text-healing-700 hover:text-healing-800">+ New Plan</button>
+            </div>
+            <div id="dPlans" class="space-y-2.5 text-xs sm:text-sm">–</div>
+          </div>
+
+          <!-- Live Pose Workout Sessions -->
+          <div class="card p-6">
+            <h3 class="font-display font-bold text-base text-slate-900 mb-3">Patient Workout History</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr class="text-left text-slate-400 border-b border-slate-100 pb-2">
+                    <th class="pb-2 pr-3 font-semibold">Date</th>
+                    <th class="pb-2 pr-3 font-semibold">Exercise</th>
+                    <th class="pb-2 pr-3 font-semibold">Completed Reps</th>
+                    <th class="pb-2 pr-3 font-semibold">Max Angle (°)</th >
+                    <th class="pb-2 font-semibold">Pose Quality</th>
+                  </tr>
+                </thead>
+                <tbody id="dSessions" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Clinical Notes -->
+          <div class="card p-6 border-t-4 border-t-clinical-500">
+            <h3 class="font-display font-bold text-base text-slate-900 mb-2">Physiotherapy Clinical Notes</h3>
+            <div id="dNotes" class="space-y-2.5 mb-3 max-h-48 overflow-y-auto pr-1"></div>
+            <div class="flex gap-2">
+              <input id="noteInput" class="input flex-1" placeholder="Add clinical note or progress assessment…" />
+              <button onclick="addNote()" class="btn-emerald shrink-0">Record Note</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal 1: Plan Modal -->
+<div id="planModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl border border-healing-100">
+    <h3 id="planModalTitle" class="font-display font-bold text-xl text-slate-900 mb-1">Prescribe Rehabilitation Plan</h3>
+    <p class="text-xs text-slate-500 mb-4">Select dataset exercises with target ROM and repetitions.</p>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Plan Title</label>
+    <input id="planTitle" class="input mb-3" placeholder="Plan title" value="Post-Op Joint Rehabilitation" />
+
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 block mb-1">Start Date</label>
+        <input id="planStartDate" type="date" class="input text-xs sm:text-sm" />
+      </div>
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 block mb-1">Target Completion</label>
+        <input id="planEndDate" type="date" class="input text-xs sm:text-sm" />
+      </div>
+    </div>
+
+    <label class="block text-xs font-bold text-slate-700 mb-1.5">Select Targeted Exercises from Catalog</label>
+    <div id="exercisePick" class="space-y-2 max-h-56 overflow-y-auto mb-4 text-xs sm:text-sm p-1"></div>
+
+    <div class="mt-4 flex gap-2.5 justify-end">
+      <button onclick="document.getElementById('planModal').classList.add('hidden')" class="btn-secondary">Cancel</button>
+      <button id="savePlanButton" onclick="savePlan()" class="btn-emerald font-bold">Assign Plan to Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 2: Schedule Modal -->
+<div id="scheduleModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-teal-100">
+    <h3 class="font-display font-bold text-xl text-slate-900 mb-1">Send Schedule Alert</h3>
+    <p class="text-xs text-slate-500 mb-4">Notify patient of therapy session or checkup.</p>
+
+    <input id="schTitle" class="input mb-2.5" value="Daily Physical Therapy Routine" />
+    <select id="schType" class="input mb-2.5">
+      <option value="exercise">Exercise Session</option>
+      <option value="checkup">Virtual Checkup</option>
+      <option value="visit">In-Clinic Session</option>
+    </select>
+    <input id="schDt" type="datetime-local" class="input mb-2.5" />
+    <textarea id="schNotes" class="input mb-4" rows="2" placeholder="Notes for patient…"></textarea>
+
+    <div class="flex gap-2.5 justify-end">
+      <button onclick="document.getElementById('scheduleModal').classList.add('hidden')" class="btn-secondary">Cancel</button>
+      <button onclick="submitSchedule()" class="btn-primary font-bold">Broadcast Alert</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 3: Complaint Modal -->
+<div id="complaintModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+    <h3 class="font-display font-bold text-xl text-slate-900 mb-1">Clinical Report / Issue</h3>
+    <p class="text-xs text-slate-500 mb-4">Submitted confidentially to clinic management.</p>
+    <div class="space-y-3 text-sm">
+      <select id="cAgainstRole" class="input">
+        <option value="doctor">Doctor</option>
+        <option value="patient">Patient</option>
+        <option value="other">Other Hospital Staff</option>
+      </select>
+      <input id="cAgainstName" class="input" placeholder="Staff / Patient Name (Optional)" />
+      <input id="cSubject" class="input" placeholder="Subject *" />
+      <textarea id="cDesc" rows="3" class="input" placeholder="Description of concern *"></textarea>
+    </div>
+    <div class="mt-5 flex gap-2.5 justify-end">
+      <button onclick="document.getElementById('complaintModal').classList.add('hidden')" class="btn-secondary">Cancel</button>
+      <button onclick="submitComplaint()" class="btn-rose font-bold">Submit Report</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const user = requireAuth(['physiotherapist']);
+if (!user) throw new Error('auth');
+document.getElementById('userName').textContent = user.name;
+
+let selectedPatientId = null;
+let patients = [];
+let exercises = [];
+let activePatientPlans = [];
+let editingPlanId = null;
+
+let chartRomPainInstance = null;
+let chartRepsInstance = null;
+let chartQualityInstance = null;
+
+function renderPhysioCharts(sessions) {
+  if (typeof Chart === 'undefined') return;
+
+  let dataList = (sessions && sessions.length) ? [...sessions].reverse() : [
+    { date: "Oct 15", max_rom: 85, pain_score: 6, reps_completed: 8, target_reps: 10, quality: "Fair" },
+    { date: "Oct 17", max_rom: 95, pain_score: 5, reps_completed: 10, target_reps: 10, quality: "Good" },
+    { date: "Oct 19", max_rom: 110, pain_score: 4, reps_completed: 12, target_reps: 12, quality: "Good" },
+    { date: "Oct 21", max_rom: 125, pain_score: 3, reps_completed: 15, target_reps: 15, quality: "Good" }
+  ];
+
+  const labels = dataList.map(s => s.date || "Day");
+  const romData = dataList.map(s => s.max_rom || 0);
+  const painData = dataList.map(s => s.pain_score || 0);
+  const repsDone = dataList.map(s => s.reps_completed || 0);
+  const repsTarget = dataList.map(s => s.target_reps || 10);
+
+  let goodCount = 0, fairCount = 0, poorCount = 0;
+  dataList.forEach(s => {
+    const q = (s.quality || "").toLowerCase();
+    if (q.includes("good")) goodCount++;
+    else if (q.includes("fair")) fairCount++;
+    else poorCount++;
+  });
+
+  const ctx1 = document.getElementById("phyChartRomPain");
+  if (ctx1) {
+    if (chartRomPainInstance) chartRomPainInstance.destroy();
+    chartRomPainInstance = new Chart(ctx1, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "ROM (°)",
+            data: romData,
+            borderColor: "#0d9488",
+            backgroundColor: "rgba(13, 148, 136, 0.1)",
+            tension: 0.35,
+            fill: true,
+            yAxisID: "y"
+          },
+          {
+            label: "Pain Score",
+            data: painData,
+            borderColor: "#ef4444",
+            borderDash: [4, 4],
+            tension: 0.35,
+            yAxisID: "y1"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { type: "linear", display: true, position: "left", min: 0, max: 160 },
+          y1: { type: "linear", display: true, position: "right", min: 0, max: 10, grid: { drawOnChartArea: false } }
+        }
+      }
+    });
+  }
+
+  const ctx2 = document.getElementById("phyChartReps");
+  if (ctx2) {
+    if (chartRepsInstance) chartRepsInstance.destroy();
+    chartRepsInstance = new Chart(ctx2, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          { label: "Completed", data: repsDone, backgroundColor: "#0d9488", borderRadius: 4 },
+          { label: "Prescribed", data: repsTarget, backgroundColor: "#cbd5e1", borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  const ctx3 = document.getElementById("phyChartQuality");
+  if (ctx3) {
+    if (chartQualityInstance) chartQualityInstance.destroy();
+    chartQualityInstance = new Chart(ctx3, {
+      type: "doughnut",
+      data: {
+        labels: ["Good Form", "Compensating (Fair)", "Poor Technique"],
+        datasets: [{
+          data: [goodCount || 3, fairCount || 1, poorCount || 0],
+          backgroundColor: ["#10b981", "#f59e0b", "#ef4444"]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } } }
+      }
+    });
+  }
+}
+
+async function playVoice(msgId) {
+  try {
+    const data = await api.getVoiceAudio(msgId);
+    const bin = atob(data.audio_base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: data.mime || 'audio/webm' });
+    const url = URL.createObjectURL(blob);
+    new Audio(url).play();
+  } catch (e) {
+    alert('Cannot play voice: ' + e.message + '\n(Text transcript is still available.)');
+  }
+}
+
+function renderMsgList(msgs, boxId) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  if (!msgs || !msgs.length) {
+    box.innerHTML = '<p class="text-slate-400 text-xs">No messages yet</p>';
+    return;
+  }
+  box.innerHTML = msgs.slice(0, 25).map(m => {
+    const playBtn = m.has_audio
+      ? `<button onclick="playVoice('${m.id}')" class="mt-1 text-xs text-healing-700 font-bold underline">▶ Play voice note</button>`
+      : '';
+    return `<div class="border rounded-2xl p-3 text-xs ${m.from_role==='patient'?'bg-rehab-50/60 border-rehab-200':'bg-white border-slate-100'}">
+      <div class="flex justify-between items-center text-slate-500 mb-1">
+        <span><b>${m.from_role}</b> → ${m.to_role}</span>
+        <span class="text-[10px] text-slate-400">${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+      </div>
+      <div class="text-slate-800 font-medium">${m.transcript || '(voice note)'}</div>
+      ${playBtn}
+    </div>`;
+  }).join('');
+}
+
+function showLive(msg) {
+  document.getElementById('liveMsg').textContent = '🔔 ' + msg;
+  document.getElementById('liveFeed').classList.remove('hidden');
+  setTimeout(() => document.getElementById('liveFeed').classList.add('hidden'), 7000);
+}
+
+let seenPatientAlertIds = new Set();
+async function pollPatientAlerts() {
+  try {
+    const alerts = await api.getPatientAlerts();
+    const fresh = (alerts || []).filter(a => a && a.id && !seenPatientAlertIds.has(a.id));
+    fresh.forEach(a => {
+      seenPatientAlertIds.add(a.id);
+      if (a.status !== 'resolved') showLive(`Patient alert (${a.severity || 'medium'}): ${a.message || a.alert_type || 'Please review patient update'}`);
+    });
+    if (seenPatientAlertIds.size > 500) seenPatientAlertIds = new Set(Array.from(seenPatientAlertIds).slice(-250));
+  } catch (e) { console.warn('Patient alert polling failed:', e.message); }
+}
+setTimeout(pollPatientAlerts, 1200);
+setInterval(pollPatientAlerts, 10000);
+
+connectRealtime('physiotherapist', (msg) => {
+  document.getElementById('liveDot').textContent = '● Live Care';
+  document.getElementById('liveDot').className = 'text-xs text-healing-600 font-bold';
+  if (msg.event === 'video_call_signal' && msg.action === 'initiate') {
+    if (confirm('Incoming video consultation from ' + (msg.caller_name || 'patient') + '. Join now?')) {
+      openPhysioFlexCall(msg.room_id, 'Video consultation with ' + (msg.caller_name || 'patient'));
+    }
+    return;
+  }
+  if (msg.event) {
+    showLive(msg.message || msg.event);
+    loadInbox();
+    if (selectedPatientId) selectPatient(selectedPatientId);
+  }
+});
+
+async function load() {
+  try {
+    const data = await api.physioDashboard();
+    patients = data.patients || [];
+    renderPatientList();
+    if (patients.length > 0 && !selectedPatientId) {
+      selectPatient(patients[0].id);
+    }
+  } catch (e) {
+    document.getElementById('patientList').innerHTML = '<p class="text-xs text-red-500">Failed to load patients: ' + e.message + '</p>';
+  }
+  try { exercises = await api.getExercises(); } catch(e) { exercises = []; }
+  loadInbox();
+  loadSuggestions();
+}
+
+function renderPatientList() {
+  const curUser = JSON.parse(localStorage.getItem('user') || '{}');
+  document.getElementById('patientList').innerHTML = patients.map(p => {
+    const isMine = p.physio_id === curUser.id;
+    return `
+      <button onclick="selectPatient('${p.id}')" class="w-full text-left p-3.5 rounded-2xl border transition ${selectedPatientId===p.id?'bg-healing-50/80 border-healing-300 shadow-sm':'bg-white border-slate-100 hover:border-healing-200'}">
+        <div class="flex items-center justify-between">
+          <div class="font-bold text-sm text-slate-900">${p.name}</div>
+          <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isMine ? 'bg-healing-100 text-healing-800 border border-healing-200' : 'bg-slate-100 text-slate-600'}">
+            ${isMine ? 'My Patient' : 'Clinic'}
+          </span>
+        </div>
+        <div class="text-xs text-slate-500 mt-1 truncate">${p.condition || 'General Rehabilitation'}</div>
+      </button>
+    `;
+  }).join('') || '<p class="text-xs text-slate-400 py-4 text-center">No patients registered in clinic yet.</p>';
+}
+
+async function claimCurrentPatient() {
+  if (!selectedPatientId) return;
+  try {
+    await api.claimPatient(selectedPatientId);
+    alert('Patient successfully assigned to your care!');
+    await load();
+    selectPatient(selectedPatientId);
+  } catch(e) {
+    alert('Failed to assign patient: ' + e.message);
+  }
+}
+
+async function loadInbox() {
+  try {
+    const msgs = await api.getVoiceMessages();
+    renderMsgList(msgs, 'phyInbox');
+  } catch (e) {
+    document.getElementById('phyInbox').innerHTML = '<p class="text-red-500 text-xs">' + e.message + '</p>';
+  }
+}
+
+async function selectPatient(id) {
+  selectedPatientId = id;
+  document.getElementById('btnNewPlan').disabled = false;
+  renderPatientList();
+  const p = patients.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('detailEmpty').classList.add('hidden');
+  document.getElementById('detailPanel').classList.remove('hidden');
+  document.getElementById('dName').textContent = p.name;
+  document.getElementById('dCondition').textContent = p.condition || 'General Rehabilitation';
+  document.getElementById('dPain').textContent = (p.current_pain ?? '–') + '/10';
+  document.getElementById('dRom').textContent = (p.current_rom ?? '–') + '°';
+  document.getElementById('dAdherence').textContent = (p.adherence_percent ?? '–') + '%';
+  document.getElementById('dStatus').textContent = p.status || 'active';
+
+  const curUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const badge = document.getElementById('dPhysioBadge');
+  const claimBtn = document.getElementById('btnClaimPatient');
+  if (p.physio_id === curUser.id) {
+    badge.textContent = 'Assigned to You';
+    badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-healing-100 text-healing-800 border border-healing-200';
+    claimBtn.classList.add('hidden');
+  } else {
+    badge.textContent = p.physio_id ? 'Assigned to another PT' : 'Unassigned';
+    badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-care-100 text-care-800 border border-care-200';
+    claimBtn.classList.remove('hidden');
+  }
+
+  const [sessions, notes, plans, msgs] = await Promise.all([
+    api.getSessions(id).catch(() => []),
+    api.getNotes(id).catch(() => []),
+    api.getPlans(id).catch(() => []),
+    api.getVoiceMessages().catch(() => []),
+  ]);
+  activePatientPlans = plans || [];
+
+  renderPhysioCharts(sessions);
+
+  document.getElementById('dSessions').innerHTML = sessions.slice(0, 10).map(s => `
+    <tr class="border-b border-slate-50 py-2">
+      <td class="py-2.5 pr-3 text-slate-600">${s.date}</td>
+      <td class="py-2.5 pr-3 font-semibold text-slate-800">${s.exercise_name}</td>
+      <td class="py-2.5 pr-3 text-healing-700 font-bold">${s.reps_completed}/${s.target_reps}</td>
+      <td class="py-2.5 pr-3 font-bold">${s.max_rom}°</td>
+      <td class="py-2.5 text-healing-700 font-semibold">${s.quality}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="py-4 text-slate-400 text-center">No workout sessions logged yet</td></tr>';
+
+  document.getElementById('dNotes').innerHTML = notes.length
+    ? notes.map(n => `<div class="text-xs sm:text-sm border-l-4 border-healing-400 pl-3 py-1 bg-healing-50/30 rounded-r-xl">
+        <p class="text-slate-800 font-medium">${n.content}</p>
+        <p class="text-[10px] text-slate-400 mt-1">${n.author_role} · ${new Date(n.created_at).toLocaleString()}</p>
+      </div>`).join('')
+    : '<p class="text-slate-400 text-xs">No clinical notes recorded yet</p>';
+
+  document.getElementById('dPlans').innerHTML = (plans || []).length
+    ? plans.map(pl => {
+        const exNames = (pl.exercises || []).map(e => typeof e === 'object' && e ? (e.name || e.exercise_name || e.id || 'Exercise') : String(e)).join(', ');
+        return `<div class="border rounded-2xl p-3.5 bg-white border-healing-100 shadow-sm">
+          <div class="flex items-center justify-between gap-2">
+            <b class="text-slate-900 font-bold">${pl.title}</b>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${pl.status === 'active' ? 'bg-healing-100 text-healing-800' : 'bg-slate-200 text-slate-700'}">${pl.status}</span>
+          </div>
+          <div class="text-xs text-slate-600 mt-1.5 font-medium">${exNames || 'No exercises specified'}</div>
+          <div class="mt-2 flex justify-end"><button type="button" onclick="openEditPlan('${pl.id}')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-healing-50 text-healing-800 border border-healing-200">Edit exercises / targets</button></div>
+        </div>`;
+      }).join('')
+    : '<p class="text-slate-400 text-xs">No rehab plans assigned yet — click "+ New Plan" above</p>';
+
+  const related = msgs.filter(m =>
+    m.from_id === id || m.to_user_id === id ||
+    (m.from_role === 'patient' && m.to_role === 'physiotherapist') ||
+    (m.from_role === 'physiotherapist' && m.to_role === 'patient')
+  );
+  renderMsgList(related, 'phyPatientMsgs');
+}
+
+async function sendPhyMsg() {
+  if (!selectedPatientId) return alert('Select a patient first');
+  const input = document.getElementById('phyMsgInput');
+  const status = document.getElementById('phyMsgStatus');
+  if (!input.value.trim()) return;
+  status.textContent = 'Sending…';
+  try {
+    await api.createVoiceMessage({
+      to_role: 'patient',
+      to_user_id: selectedPatientId,
+      transcript: input.value.trim(),
+    });
+    input.value = '';
+    status.textContent = 'Sent to patient portal';
+    loadInbox();
+    selectPatient(selectedPatientId);
+  } catch (e) {
+    status.textContent = 'Failed: ' + e.message;
+    alert('Send failed: ' + e.message);
+  }
+}
+
+async function addNote() {
+  if (!selectedPatientId) return alert('Select a patient first');
+  const input = document.getElementById('noteInput');
+  if (!input.value.trim()) return;
+  try {
+    await api.createNote(selectedPatientId, input.value.trim());
+    input.value = '';
+    selectPatient(selectedPatientId);
+  } catch (e) { alert('Note failed: ' + e.message); }
+}
+
+function renderExercisePicker(selected = []) {
+  const selectedMap = new Map((selected || []).map(e => [String(e.exercise_id || e.id), e]));
+  const box = document.getElementById('exercisePick');
+  box.innerHTML = (exercises || []).map(e => {
+    const existing = selectedMap.get(String(e.id));
+    const checked = existing ? 'checked' : '';
+    const sets = existing?.sets ?? 3;
+    const reps = existing?.reps ?? 12;
+    const rom = existing?.target_rom ?? e.default_target_rom ?? 90;
+    const frequency = existing?.frequency ?? 'Daily';
+    return `
+      <div class="border rounded-xl p-3 border-slate-200">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" value="${e.id}" data-name="${String(e.name || e.id).replace(/"/g,'&quot;')}" class="exPick w-4 h-4" ${checked}/>
+          <span class="font-bold text-slate-800">${e.name || e.id}</span>
+          <span class="text-[10px] text-slate-500">${e.body_part || 'Full body'}</span>
+        </label>
+        <div class="grid grid-cols-4 gap-2 mt-2">
+          <label class="text-[10px] text-slate-500">Sets<input class="input exSets text-xs p-1" type="number" min="1" max="10" value="${sets}"></label>
+          <label class="text-[10px] text-slate-500">Reps<input class="input exReps text-xs p-1" type="number" min="1" max="100" value="${reps}"></label>
+          <label class="text-[10px] text-slate-500">Target ROM °<input class="input exRom text-xs p-1" type="number" min="1" max="180" value="${rom}"></label>
+          <label class="text-[10px] text-slate-500">Frequency<input class="input exFrequency text-xs p-1" maxlength="40" value="${frequency}"></label>
+        </div>
+      </div>`;
+  }).join('') || '<p class="text-slate-400 text-xs">No exercises in catalog</p>';
+}
+function openPlanModal() {
+  if (!selectedPatientId) return alert('Select a patient first');
+  editingPlanId = null;
+  document.getElementById('planModalTitle').textContent = 'Prescribe Rehabilitation Plan';
+  document.getElementById('savePlanButton').textContent = 'Assign Plan to Patient';
+  document.getElementById('planTitle').value = 'Post-Op Joint Rehabilitation';
+  const today = new Date().toISOString().split('T')[0];
+  const nextMonth = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+  document.getElementById('planStartDate').value = today;
+  document.getElementById('planEndDate').value = nextMonth;
+  renderExercisePicker([]);
+  document.getElementById('planModal').classList.remove('hidden');
+  document.getElementById('planModal').classList.add('flex');
+}
+function openEditPlan(planId) {
+  const plan = activePatientPlans.find(p => String(p.id) === String(planId));
+  if (!plan) return alert('Plan not found. Refresh the patient record and try again.');
+  editingPlanId = plan.id;
+  document.getElementById('planModalTitle').textContent = 'Update Rehabilitation Plan';
+  document.getElementById('savePlanButton').textContent = 'Save Exercise Updates';
+  document.getElementById('planTitle').value = plan.title || 'Rehabilitation Plan';
+  document.getElementById('planStartDate').value = plan.start_date || '';
+  document.getElementById('planEndDate').value = plan.end_date || '';
+  renderExercisePicker(plan.exercises || []);
+  document.getElementById('planModal').classList.remove('hidden');
+  document.getElementById('planModal').classList.add('flex');
+}
+async function savePlan() {
+  if (!selectedPatientId) return alert('Select a patient first');
+  const checked = [...document.querySelectorAll('.exPick:checked')];
+  if (!checked.length) return alert('Select at least one exercise.');
+  const body = {
+    title: document.getElementById('planTitle').value.trim() || 'Rehabilitation Plan',
+    start_date: document.getElementById('planStartDate').value,
+    end_date: document.getElementById('planEndDate').value,
+    status: 'active',
+    exercises: checked.map(el => {
+      const row = el.closest('.border');
+      return {
+        exercise_id: el.value,
+        name: el.dataset.name || el.value,
+        sets: Math.max(1, Math.min(10, Number(row.querySelector('.exSets').value) || 3)),
+        reps: Math.max(1, Math.min(100, Number(row.querySelector('.exReps').value) || 12)),
+        target_rom: Math.max(1, Math.min(180, Number(row.querySelector('.exRom').value) || 90)),
+        frequency: row.querySelector('.exFrequency').value.trim() || 'Daily',
+      };
+    }),
+  };
+  try {
+    if (editingPlanId) await api.updatePlan(editingPlanId, body);
+    else await api.createPlan(selectedPatientId, body);
+    document.getElementById('planModal').classList.add('hidden');
+    document.getElementById('planModal').classList.remove('flex');
+    editingPlanId = null;
+    alert('Rehabilitation plan saved successfully.');
+    await selectPatient(selectedPatientId);
+  } catch (e) { alert('Could not save plan: ' + e.message); }
+}
+
+function openScheduleModal() {
+  if (!selectedPatientId) return alert('Select a patient first');
+  document.getElementById('scheduleModal').classList.remove('hidden');
+  document.getElementById('scheduleModal').classList.add('flex');
+}
+async function submitSchedule() {
+  const dt = document.getElementById('schDt').value;
+  if (!dt) return alert('Pick date/time');
+  await api.createSchedule({
+    patient_id: selectedPatientId,
+    title: document.getElementById('schTitle').value || 'Physical Therapy Session',
+    schedule_type: document.getElementById('schType').value,
+    datetime: dt,
+    notes: document.getElementById('schNotes').value,
+  });
+  alert('Schedule alert sent to patient');
+  document.getElementById('scheduleModal').classList.add('hidden');
+}
+
+async function loadSuggestions() {
+  try {
+    const list = await api.getSuggestions();
+    const filtered = selectedPatientId ? list.filter(s => s.patient_id === selectedPatientId) : list;
+    document.getElementById('suggestionList').innerHTML = filtered.length
+      ? filtered.map(s => {
+          const exNames = (s.suggested_exercises || []).map(e => typeof e === 'object' && e ? (e.name || e.id || 'Exercise') : String(e)).join(', ');
+          return `<div class="border rounded-2xl p-3 bg-clinical-50/50 border-clinical-200">
+            <div class="font-bold text-clinical-900">${s.operation_type || 'Clinical Suggestion'}</div>
+            <div class="text-[11px] text-slate-600 mt-1">Sessions: ${s.recommended_sessions || 0} · Exercises: ${exNames || 'None specified'}</div>
+          </div>`;
+        }).join('')
+      : '<span class="text-slate-400 text-xs">No doctor suggestions pending</span>';
+  } catch(e) {}
+}
+
+function openComplaintModal() {
+  document.getElementById('complaintModal').classList.remove('hidden');
+  document.getElementById('complaintModal').classList.add('flex');
+}
+async function submitComplaint() {
+  const subject = document.getElementById('cSubject').value.trim();
+  const description = document.getElementById('cDesc').value.trim();
+  if (!subject || !description) return alert('Subject and Description required');
+  await api.createComplaint({ 
+    against_role: document.getElementById('cAgainstRole').value, 
+    against_name: document.getElementById('cAgainstName').value, 
+    category: 'misconduct', 
+    subject, 
+    description, 
+    severity: 'medium' 
+  });
+  alert('Report submitted to hospital administration');
+  document.getElementById('complaintModal').classList.add('hidden');
+}
+
+load();
+setInterval(loadInbox, 12000);
+</script>
+
+<link rel="stylesheet" href="/static/chat-widget.css">
+<script src="/static/chat-widget.js" defer></script>
+<script>
+let physioFlexCallOverlay = null;
+function openPhysioFlexCall(roomId, title = 'PhysioFlex video consultation') {
+  if (!roomId) { alert('This call has no room ID. Please start the call again.'); return; }
+  closePhysioFlexCall();
+  const safeRoom = String(roomId).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 120);
+  const overlay = document.createElement('div');
+  overlay.id = 'physioFlexCallOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#07111f;color:white;display:flex;flex-direction:column;padding:10px;box-sizing:border-box';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 4px;font:600 14px system-ui';
+  const label = document.createElement('span');
+  label.textContent = title + ' · ' + safeRoom;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.textContent = 'End / Close';
+  close.style.cssText = 'border:0;border-radius:10px;padding:10px 14px;background:#dc2626;color:#fff;font-weight:700;cursor:pointer;';
+  close.onclick = closePhysioFlexCall;
+  bar.append(label, close);
+  const frameHost = document.createElement('div');
+  frameHost.id = 'physioFlexJitsiHost';
+  frameHost.style.cssText = 'flex:1;width:100%;min-height:0;border-radius:12px;overflow:hidden;background:#111827';
+  overlay.append(bar, frameHost);
+  document.body.appendChild(overlay);
+  physioFlexCallOverlay = overlay;
+
+  const join = () => {
+    if (!window.JitsiMeetExternalAPI || !document.getElementById('physioFlexJitsiHost')) {
+      frameHost.innerHTML = '<div style="padding:24px;font:16px system-ui">Unable to load video service. Check your internet connection, then close and retry.</div>';
+      return;
+    }
+    const api = new window.JitsiMeetExternalAPI('meet.jit.si', {
+      roomName: 'PhysioFlex-' + safeRoom,
+      parentNode: frameHost,
+      width: '100%',
+      height: '100%',
+      configOverwrite: { 
+        prejoinPageEnabled: false, 
+        startWithAudioMuted: false, 
+        startWithVideoMuted: false 
+      },
+      interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen', 'hangup', 'chat', 'raisehand', 'tileview'] },
+      userInfo: { displayName: (JSON.parse(localStorage.getItem('user') || '{}').name || 'Physiotherapist') }
+    });
+    api.addEventListener('readyToClose', closePhysioFlexCall);
+  };
+
+  if (window.JitsiMeetExternalAPI) {
+    join();
+  } else {
+    let script = document.getElementById('physioflex-jitsi-api');
+    if (!script) {
+      script = document.createElement('script');
+      script.id = 'physioflex-jitsi-api';
+      script.src = 'https://meet.jit.si/external_api.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener('load', join, { once: true });
+    script.addEventListener('error', () => {
+      frameHost.innerHTML = '<div style="padding:24px;font:16px system-ui">Video service failed to load. Check your internet connection and try again.</div>';
+    }, { once: true });
+  }
+}
+
+function closePhysioFlexCall() {
+  const overlay = document.getElementById('physioFlexCallOverlay');
+  if (overlay) overlay.remove();
+  physioFlexCallOverlay = null;
+}
+
+async function startPhysioVideoCall() {
+  if (!selectedPatientId) { alert('Select a patient first.'); return; }
+  const me = JSON.parse(localStorage.getItem('user') || '{}');
+  const room = 'patient-' + String(selectedPatientId) + '-' + Date.now().toString(36);
+  try {
+    await api.sendCallSignal({
+      target_role: 'patient', target_patient_id: selectedPatientId, room_id: room,
+      action: 'initiate', caller_name: me.name || 'Physiotherapist', caller_role: 'physiotherapist'
+    });
+    openPhysioFlexCall(room, 'Physiotherapist video consultation');
+  } catch (e) {
+    alert('Could not notify patient: ' + e.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const callButton = document.createElement('button');
+  callButton.type = 'button';
+  callButton.textContent = '📹 Call selected patient';
+  callButton.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:1000;border:0;border-radius:14px;padding:12px 16px;background:#0f766e;color:white;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,0.15);cursor:pointer;';
+  callButton.onclick = startPhysioVideoCall;
+  document.body.appendChild(callButton);
+});
+</script>
+{% endblock %}

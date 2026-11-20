@@ -1,0 +1,41 @@
+{
+    "best_model": "Extra Trees",
+    "accuracy": 0.9667221297836939,
+    "macro_f1": 0.9666717192349642,
+    "feature_count": 144,
+    "classes": [
+        "correct",
+        "low_amplitude",
+        "too_fast"
+    ],
+    "all_models_evaluated": [
+        {
+            "Model": "Extra Trees",
+            "Accuracy": 0.9667221297836939,
+            "Precision": 0.9675151292780151,
+            "Recall": 0.9667477140482128,
+            "Macro F1-score": 0.9666717192349642
+        },
+        {
+            "Model": "Random Forest",
+            "Accuracy": 0.9600665557404326,
+            "Precision": 0.9618196215556362,
+            "Recall": 0.9600893599334995,
+            "Macro F1-score": 0.9600401509959072
+        },
+        {
+            "Model": "XGBoost",
+            "Accuracy": 0.9600665557404326,
+            "Precision": 0.9612559544838523,
+            "Recall": 0.9600914380714879,
+            "Macro F1-score": 0.9600842054759461
+        },
+        {
+            "Model": "SVM",
+            "Accuracy": 0.8843594009983361,
+            "Precision": 0.8852981609456548,
+            "Recall": 0.8844409808811305,
+            "Macro F1-score": 0.8846298976270983
+        }
+    ]
+}

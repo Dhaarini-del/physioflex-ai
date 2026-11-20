@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <title>Live Exercise Session – PhysioFlex</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <style>
+    body{background:#0f172a;color:#f8fafc;font-family:system-ui,sans-serif;margin:0;padding:12px}
+    .video-wrapper{position:relative;width:100%;max-width:760px;margin:auto;border-radius:16px;overflow:hidden;background:#000}
+    video{display:none} canvas{width:100%;height:auto;display:block}
+    .stat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:12px;text-align:center}
+    .banner{display:none;background:#b45309;color:#fff;font-weight:650;padding:12px 16px;border-radius:10px;margin-bottom:12px}
+    .muted{color:#94a3b8}.metric{font-size:1.65rem;font-weight:750}
+  </style>
+</head>
+<body>
+<div class="container py-2" style="max-width:800px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="/patient" class="btn btn-sm btn-outline-light">← Back to Portal</a>
+    <span class="badge text-bg-success">Camera movement tracking</span>
+  </div>
+  <h4 id="exerciseTitle" class="mb-1">Exercise session</h4>
+  <p class="muted small mb-3">Keep the full body part visible. Camera estimates are approximate and are not a substitute for clinician assessment.</p>
+  <div id="correctionBanner" class="banner" role="status" aria-live="polite"><span id="correctionText"></span></div>
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="muted small">Completed reps</div><div id="repDisplay" class="metric">0</div><div id="targetDisplay" class="muted small">Target: 10</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="muted small">Current knee flexion</div><div id="angleDisplay" class="metric">–°</div><div class="muted small">Estimated angle</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="muted small">Observed ROM</div><div id="romDisplay" class="metric">–°</div><div class="muted small">Flexion excursion</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="muted small">Posture status</div><div id="postureDisplay" class="metric fs-5">Waiting</div><div class="muted small">Camera estimate</div></div></div>
+  </div>
+  <div class="video-wrapper"><video id="webcam" playsinline></video><canvas id="outputCanvas" width="640" height="480"></canvas></div>
+  <div class="row g-2 mt-3 align-items-end">
+    <div class="col-6"><label class="form-label small">Pain after session (0–10)</label><input id="painScore" type="number" min="0" max="10" value="0" class="form-control"></div>
+    <div class="col-6"><label class="form-label small">Sets completed</label><input id="setsCompleted" type="number" min="1" max="10" value="1" class="form-control"></div>
+  </div>
+  <div class="d-flex justify-content-center gap-3 mt-3">
+    <button class="btn btn-success px-4 fw-semibold" id="startBtn">Start camera</button>
+    <button class="btn btn-outline-danger px-4 fw-semibold" id="finishBtn" disabled>Complete session</button>
+  </div>
+  <p id="sessionStatus" class="small muted text-center mt-3" aria-live="polite">Camera access requires HTTPS or localhost.</p>
+</div>
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const exerciseName = params.get('exercise') || 'Knee movement';
+  const exerciseId = params.get('eid') || '';
+  const planId = params.get('plan') || '';
+  const targetReps = Math.max(1, Number(params.get('reps') || 10));
+  const targetRom = Math.max(1, Number(params.get('rom') || 90));
+  const video = document.getElementById('webcam');
+  const canvas = document.getElementById('outputCanvas');
+  const ctx = canvas.getContext('2d');
+  const $ = id => document.getElementById(id);
+  $('exerciseTitle').textContent = exerciseName;
+  $('targetDisplay').textContent = `Target: ${targetReps}`;
+  let camera = null, running = false, reps = 0, phase = 'extended';
+  let minFlexion = Infinity, maxFlexion = -Infinity, angleSamples = 0;
+  let postureSamples = 0, badPostureSamples = 0, lastCueAt = 0, startedAt = 0;
+  let lastAngle = null, frameCount = 0;
+
+  function pointVisible(p) { return !!p && (p.visibility == null || p.visibility >= 0.65); }
+  function angle(a,b,c) {
+    if (![a,b,c].every(pointVisible)) return null;
+    // Convert normalized landmark coordinates to the canvas pixel coordinate system.
+    const pts = [a,b,c].map(p => ({x:p.x*canvas.width,y:p.y*canvas.height}));
+    const [p1,p2,p3] = pts;
+    const v1={x:p1.x-p2.x,y:p1.y-p2.y}, v2={x:p3.x-p2.x,y:p3.y-p2.y};
+    const dot=v1.x*v2.x+v1.y*v2.y;
+    const mag=Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y);
+    if (!mag) return null;
+    return Math.acos(Math.max(-1,Math.min(1,dot/mag)))*180/Math.PI;
+  }
+  function cue(message, postureBad=true) {
+    const now=Date.now();
+    $('correctionText').textContent=message;
+    $('correctionBanner').style.display='block';
+    $('postureDisplay').textContent=postureBad?'Adjust':'Check';
+    if (now-lastCueAt>4000 && 'speechSynthesis' in window) {
+      lastCueAt=now; speechSynthesis.cancel();
+      const utterance=new SpeechSynthesisUtterance(message); utterance.rate=0.95; speechSynthesis.speak(utterance);
+    }
+  }
+  function checkPosture(lm) {
+    const leftShoulder=lm[11], rightShoulder=lm[12], leftHip=lm[23], rightHip=lm[24];
+    if (![leftShoulder,rightShoulder,leftHip,rightHip].every(pointVisible)) return 'Move back until shoulders and hips are visible';
+    const shoulder={x:(leftShoulder.x+rightShoulder.x)/2,y:(leftShoulder.y+rightShoulder.y)/2};
+    const hip={x:(leftHip.x+rightHip.x)/2,y:(leftHip.y+rightHip.y)/2};
+    const dx=(shoulder.x-hip.x)*canvas.width, dy=(shoulder.y-hip.y)*canvas.height;
+    const lean=Math.abs(Math.atan2(dx,Math.abs(dy))*180/Math.PI);
+    const shoulderTilt=Math.abs(leftShoulder.y-rightShoulder.y)*canvas.height;
+    const hipTilt=Math.abs(leftHip.y-rightHip.y)*canvas.height;
+    if (lean>18) return 'Keep your trunk upright; reduce forward or sideways leaning';
+    if (shoulderTilt>28 || hipTilt>28) return 'Keep both shoulders and hips level';
+    return '';
+  }
+  function onResults(results) {
+    ctx.save(); ctx.clearRect(0,0,canvas.width,canvas.height);
+    if (results.image) ctx.drawImage(results.image,0,0,canvas.width,canvas.height);
+    if (results.poseLandmarks) {
+      const lm=results.poseLandmarks;
+      drawConnectors(ctx,lm,POSE_CONNECTIONS,{color:'#22c55e',lineWidth:3});
+      drawLandmarks(ctx,lm,{color:'#ef4444',lineWidth:2});
+      // Bilateral knee estimates. Use the better-visible side; avoid fabricating missing measurements.
+      const left=angle(lm[23],lm[25],lm[27]);
+      const right=angle(lm[24],lm[26],lm[28]);
+      const valid=[left,right].filter(v=>v!==null);
+      if (valid.length) {
+        // Knee flexion = 180° - interior hip/knee/ankle angle.
+        const flexion=180-Math.min(...valid);
+        lastAngle=flexion; angleSamples++; minFlexion=Math.min(minFlexion,flexion); maxFlexion=Math.max(maxFlexion,flexion);
+        $('angleDisplay').textContent=`${Math.round(flexion)}°`;
+        $('romDisplay').textContent=`${Math.round(maxFlexion-minFlexion)}°`;
+        // One rep: begin near extension, reach a flexed position, then return toward extension.
+        if (phase==='extended' && flexion>=Math.max(35,targetRom*0.45)) phase='flexed';
+        else if (phase==='flexed' && flexion<=25) { reps++; phase='extended'; $('repDisplay').textContent=reps; }
+      }
+      const postureMessage=checkPosture(lm);
+      postureSamples++;
+      if (postureMessage) { badPostureSamples++; cue(postureMessage); }
+      else if (postureSamples%12===0) { $('postureDisplay').textContent='Good'; $('correctionBanner').style.display='none'; }
+    } else {
+      $('postureDisplay').textContent='Not detected';
+      if (frameCount%30===0) cue('Move into full view of the camera',false);
+    }
+    frameCount++; ctx.restore();
+  }
+  const pose=new Pose({locateFile:file=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+  pose.setOptions({modelComplexity:1,smoothLandmarks:true,minDetectionConfidence:0.7,minTrackingConfidence:0.7});
+  pose.onResults(onResults);
+
+  $('startBtn').addEventListener('click',async()=>{
+    if (!planId || !exerciseId) { $('sessionStatus').textContent='Missing plan or exercise ID. Return to your assigned exercise list and start again.'; return; }
+    try {
+      $('startBtn').disabled=true;
+      camera=new Camera(video,{onFrame:async()=>{if(running) await pose.send({image:video});},width:640,height:480});
+      await camera.start(); running=true; startedAt=Date.now();
+      $('finishBtn').disabled=false; $('sessionStatus').textContent='Session running. Stop if you experience pain or dizziness.';
+    } catch(err) {
+      $('startBtn').disabled=false; $('sessionStatus').textContent=`Camera could not start: ${err.message}. Use HTTPS and allow camera permission.`;
+    }
+  });
+  $('finishBtn').addEventListener('click',async()=>{
+    if (!running) return;
+    running=false; if(camera) camera.stop();
+    const token=localStorage.getItem('token');
+    const rom=(Number.isFinite(maxFlexion)&&Number.isFinite(minFlexion))?Math.max(0,maxFlexion-minFlexion):0;
+    const pain=Math.max(0,Math.min(10,Number($('painScore').value)||0));
+    const sets=Math.max(1,Math.min(10,Number($('setsCompleted').value)||1));
+    const duration=Math.max(0,Math.round((Date.now()-startedAt)/1000));
+    const postureRate=postureSamples?badPostureSamples/postureSamples:1;
+    const quality=angleSamples===0?'Not measured':postureRate<0.1?'Good':postureRate<0.3?'Fair':'Needs review';
+    if (!angleSamples) { $('sessionStatus').textContent='No reliable joint angle was detected. Session was not saved; improve camera placement and retry.'; $('startBtn').disabled=false; $('finishBtn').disabled=true; return; }
+    try {
+      const response=await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+        body:JSON.stringify({plan_id:planId,exercise_id:exerciseId,exercise_name:exerciseName,reps_completed:reps,target_reps:targetReps,sets_completed:sets,max_rom:Math.round(maxFlexion),avg_rom:Math.round(rom),quality,pain_score:pain,duration_seconds:duration,source:'camera'})});
+      if(!response.ok){const err=await response.json().catch(()=>({}));throw new Error(err.detail||`HTTP ${response.status}`);}
+      $('sessionStatus').textContent=`Saved. ${reps} reps; observed flexion excursion ${Math.round(rom)}°.`;
+      $('finishBtn').disabled=true; $('startBtn').disabled=false;
+      setTimeout(()=>location.href='/patient',1200);
+    } catch(err) {
+      $('sessionStatus').textContent=`Could not save session: ${err.message}`;
+      $('startBtn').disabled=false; $('finishBtn').disabled=true;
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhysioFlex Smart Chat – Clinical AI Recovery Assistant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✚</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/chat.css">
+</head>
+<body>
+  <main class="chat-app">
+    <header class="chat-header">
+      <div class="brand-icon">✚</div>
+      <div>
+        <h1>PhysioFlex Clinical AI Assistant</h1>
+        <p>Role-aware rehabilitation support with auditable read-only data tools</p>
+      </div>
+      <a class="back-link" href="/">← Return Home</a>
+    </header>
+
+    <section class="notice">
+      <strong>✚ Clinical Health Reminder:</strong>
+      This AI assistant offers general physical therapy guidance and exercise education. It does not replace medical advice from your treating doctor or physiotherapist. Always follow your personalized hospital rehabilitation plan.
+    </section>
+
+    <section class="chat-panel">
+      <div id="chatMessages" class="messages" aria-live="polite">
+        <div class="message assistant">
+          <div class="bubble">
+            Hello! I am your PhysioFlex Clinical Recovery Assistant. How can I support your rehabilitation, range of motion exercises, or joint recovery today?
+          </div>
+        </div>
+      </div>
+
+      <div id="chatStatus" class="status" role="status"></div>
+      <div id="patientContextWrap" class="patient-context" hidden>
+        <label for="patientContextSelect">Clinical context (clinicians only)</label>
+        <select id="patientContextSelect">
+          <option value="">General guidance - no patient record selected</option>
+        </select>
+        <small>Choose only a patient you are authorized to review. AI tools are read-only; treatment and report changes require clinician action.</small>
+      </div>
+
+      <form id="chatForm" class="chat-form">
+        <textarea
+          id="chatInput"
+          rows="2"
+          maxlength="2000"
+          placeholder="Ask a question about your exercises, pain guidelines, or recovery..."
+          aria-label="Your message"
+          required
+        ></textarea>
+
+        <div class="chat-actions">
+          <button id="voiceButton" type="button" class="secondary">
+            🎙 Voice Input
+          </button>
+          <button id="speakToggle" type="button" class="secondary">
+            🔊 Read Replies
+          </button>
+          <button id="sendButton" type="submit" class="send-button">
+            Send Message
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <p class="footer-note">
+      🚨 If pain is sharp, sudden, or worsening, stop exercising immediately and contact your doctor. Call local emergency services (911 / 112) for urgent medical emergencies.
+    </p>
+  </main>
+
+  <script src="/static/js/chat.js" defer></script>
+</body>
+</html>

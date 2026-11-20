@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+{% block title %}Hospital Admin Portal – PhysioFlex Healthcare{% endblock %}
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-50/70">
+  <!-- Top Hospital Header -->
+  <div class="bg-gradient-to-r from-slate-800 via-teal-800 to-clinical-900 text-white text-xs py-1 px-4 text-center hidden sm:flex items-center justify-center gap-2">
+    <span>✚ PhysioFlex Healthcare Systems</span>
+    <span class="opacity-75">· Hospital Administration & Governance Console</span>
+  </div>
+
+  <nav class="glass sticky top-0 z-20 border-b border-teal-100">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-slate-800 to-teal-700 flex items-center justify-center text-white font-display font-extrabold shadow-sm med-pulse">
+          🏥
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-bold text-lg text-slate-900 tracking-tight">Physio<span class="text-teal-600">Flex</span></span>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">Hospital Administration</span>
+          </div>
+          <div class="flex items-center gap-1.5 -mt-0.5">
+            <span id="liveDot" class="text-xs text-slate-400 font-medium">● connecting…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-xl text-xs text-slate-700 font-bold">
+          <span>Admin: </span><span id="userName">–</span>
+        </div>
+        <button onclick="logout()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-6 sm:py-8">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-display font-extrabold text-slate-900">
+          Hospital Administration Console
+        </h1>
+        <p class="text-xs text-slate-500 mt-1">Approve patient registrations, provision clinician accounts, audit logs & resolve care quality tickets</p>
+      </div>
+
+      <button onclick="showUserModal()" class="btn-primary text-xs sm:text-sm">
+        <span>+ Add Clinical Staff / User</span>
+      </button>
+    </div>
+
+    <!-- Live Toast -->
+    <div id="liveFeed" class="mb-4 hidden">
+      <div class="bg-gradient-to-r from-teal-600 to-clinical-600 text-white font-semibold rounded-2xl px-5 py-3 text-sm shadow-md flex items-center gap-3" id="liveMsg">
+        🔔 Admin notification
+      </div>
+    </div>
+
+    <!-- 5 Colorful Admin Metric Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div class="card p-5 border-l-4 border-l-clinical-500 bg-gradient-to-br from-white via-clinical-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Users</span>
+          <div class="w-8 h-8 rounded-xl bg-clinical-100 text-clinical-600 flex items-center justify-center text-sm">👥</div>
+        </div>
+        <div id="sUsers" class="font-display text-3xl font-extrabold text-clinical-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">All registered accounts</div>
+      </div>
+
+      <div class="card p-5 border-l-4 border-l-teal-500 bg-gradient-to-br from-white via-teal-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Patients</span>
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center text-sm">🏃</div>
+        </div>
+        <div id="sPatients" class="font-display text-3xl font-extrabold text-teal-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">In rehabilitation</div>
+      </div>
+
+      <div class="card p-5 border-l-4 border-l-healing-500 bg-gradient-to-br from-white via-healing-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sessions</span>
+          <div class="w-8 h-8 rounded-xl bg-healing-100 text-healing-600 flex items-center justify-center text-sm">🏋️</div>
+        </div>
+        <div id="sSessions" class="font-display text-3xl font-extrabold text-healing-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">Completed workouts</div>
+      </div>
+
+      <div class="card p-5 border-l-4 border-l-rehab-500 bg-gradient-to-br from-white via-rehab-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Rehab Plans</span>
+          <div class="w-8 h-8 rounded-xl bg-rehab-100 text-rehab-600 flex items-center justify-center text-sm">📋</div>
+        </div>
+        <div id="sPlans" class="font-display text-3xl font-extrabold text-rehab-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">Active prescriptions</div>
+      </div>
+
+      <div class="card p-5 border-l-4 border-l-vital-500 bg-gradient-to-br from-white via-vital-50/20 to-white col-span-2 md:col-span-1">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Complaints</span>
+          <div class="w-8 h-8 rounded-xl bg-vital-100 text-vital-600 flex items-center justify-center text-sm">⚖️</div>
+        </div>
+        <div id="sComplaints" class="font-display text-3xl font-extrabold text-vital-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">Open care tickets</div>
+      </div>
+    </div>
+
+    <!-- Pending Patient Registrations Queue -->
+    <div class="card p-6 mb-6 border-t-4 border-t-teal-500">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xl">⏳</span>
+        <h2 class="font-display font-bold text-lg text-slate-900">Pending Patient Self-Registrations</h2>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">
+        Self-registered patients can view catalog exercises. Approve them to unlock camera AI sessions and clinician contact. Optionally assign their attending physician and physical therapist.
+      </p>
+      <div id="regList" class="space-y-3 text-xs sm:text-sm">Loading…</div>
+    </div>
+
+    <!-- Pending Credential Requests -->
+    <div class="card p-6 mb-6 border-t-4 border-t-care-500">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xl">🔑</span>
+        <h2 class="font-display font-bold text-lg text-slate-900">Doctor Patient Credential Requests</h2>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">
+        Physicians create clinical records for admitted patients. Only hospital administration provisions secure login email & temporary password.
+      </p>
+      <div id="credList" class="space-y-2.5 text-xs sm:text-sm">Loading…</div>
+    </div>
+
+    <!-- 2-Column: User Roster & Complaints/Grievances -->
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Users Table -->
+      <div class="card p-6 border-t-4 border-t-clinical-500">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-display font-bold text-lg text-slate-900">Hospital Staff & Patients</h2>
+          <select id="roleFilter" onchange="renderUsers()" class="text-xs font-semibold border border-slate-200 rounded-xl px-2.5 py-1.5 outline-none">
+            <option value="">All Roles</option>
+            <option value="admin">Administrators</option>
+            <option value="doctor">Physicians (MD)</option>
+            <option value="physiotherapist">Physiotherapists (PT)</option>
+            <option value="patient">Patients</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto max-h-96 overflow-y-auto">
+          <table class="w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-left text-slate-400 border-b border-slate-100 pb-2">
+                <th class="pb-2 pr-2 font-semibold">Name</th>
+                <th class="pb-2 pr-2 font-semibold">Role</th>
+                <th class="pb-2 pr-2 font-semibold">Status</th>
+                <th class="pb-2 pr-2 font-semibold">Email</th>
+                <th class="pb-2 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userRows" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Grievance & Complaint Log -->
+      <div class="card p-6 border-t-4 border-t-vital-500">
+        <h2 class="font-display font-bold text-lg text-slate-900 mb-4">Care Quality Grievances & Misconduct Reports</h2>
+        <div id="complaintList" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal: Add / Edit User -->
+<div id="userModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-teal-100">
+    <h3 id="userModalTitle" class="font-display font-bold text-xl text-slate-900 mb-4">Add User</h3>
+    <div class="space-y-3 text-sm">
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Full Name *</label>
+        <input id="uName" class="input" placeholder="e.g. Dr. Sarah Jenkins" />
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Email Address *</label>
+        <input id="uEmail" type="email" class="input" placeholder="sarah@hospital.com" />
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Initial Password</label>
+        <input id="uPassword" type="text" value="password123" class="input" />
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Hospital Role *</label>
+        <select id="uRole" class="input">
+          <option value="doctor">Doctor / Physiatrist (MD)</option>
+          <option value="physiotherapist">Physiotherapist (PT)</option>
+          <option value="patient">Patient</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Specialty / License</label>
+          <input id="uSpec" class="input" placeholder="e.g. Orthopedics" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Age</label>
+          <input id="uAge" type="number" class="input" />
+        </div>
+      </div>
+    </div>
+    <div class="mt-5 flex gap-2.5 justify-end">
+      <button onclick="closeUserModal()" class="btn-secondary">Cancel</button>
+      <button onclick="saveUser()" class="btn-primary font-bold">Save User</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const user = requireAuth(['admin']);
+if (!user) throw new Error('auth');
+document.getElementById('userName').textContent = user.name || user.email || 'Admin';
+
+let users = [];
+let editUserId = null;
+
+function showLive(msg) {
+  document.getElementById('liveMsg').textContent = '🔔 ' + msg;
+  document.getElementById('liveFeed').classList.remove('hidden');
+  setTimeout(() => document.getElementById('liveFeed').classList.add('hidden'), 8000);
+}
+
+connectRealtime('admin', (msg) => {
+  document.getElementById('liveDot').textContent = '● Live System';
+  document.getElementById('liveDot').className = 'text-xs text-healing-600 font-bold';
+  if (msg.event) {
+    showLive(msg.message || msg.event);
+    load();
+  }
+});
+
+async function load() {
+  try {
+    const [stats, userList, complaints] = await Promise.all([
+      api.adminStats(),
+      api.adminListUsers(),
+      api.getComplaints(),
+    ]);
+    users = userList || [];
+    document.getElementById('sUsers').textContent = stats.users ?? users.length;
+    document.getElementById('sPatients').textContent = stats.patients ?? '–';
+    document.getElementById('sSessions').textContent = stats.sessions ?? '–';
+    document.getElementById('sPlans').textContent = stats.plans ?? '–';
+    document.getElementById('sComplaints').textContent = stats.complaints_open ?? '–';
+    renderUsers();
+    renderComplaints(complaints || []);
+
+    const regs = await api.adminRegistrations();
+    const pendingRegs = (regs || []).filter(r => r.approval_status === 'pending');
+    const doctors = users.filter(u => u.role === 'doctor');
+    const physios = users.filter(u => u.role === 'physiotherapist');
+    const docOpts = doctors.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+    const phyOpts = physios.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+    document.getElementById('regList').innerHTML = pendingRegs.length
+      ? pendingRegs.map(r => `
+        <div class="border rounded-2xl p-4 bg-teal-50/50 border-teal-200">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div class="font-bold text-slate-900 text-sm sm:text-base">${r.name || 'Patient'}</div>
+              <div class="text-xs text-slate-500 mt-0.5">${r.email || ''} ${r.condition ? '· <span class="text-teal-700 font-medium">' + r.condition + '</span>' : ''}</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="approveReg('${r.id}')" class="px-3.5 py-1.5 bg-gradient-to-r from-healing-500 to-teal-600 text-white font-bold rounded-xl text-xs shadow-sm">Approve Care</button>
+              <button onclick="rejectReg('${r.id}','${(r.name||'Patient').replace(/'/g,'')}')" class="px-3.5 py-1.5 bg-vital-100 hover:bg-vital-200 text-vital-700 font-bold rounded-xl text-xs transition">Decline</button>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-2.5 mt-3">
+            <select id="doc_${r.id}" class="text-xs border border-teal-200 rounded-xl px-2.5 py-1.5 bg-white"><option value="">Assign Physician (Optional)</option>${docOpts}</select>
+            <select id="phy_${r.id}" class="text-xs border border-teal-200 rounded-xl px-2.5 py-1.5 bg-white"><option value="">Assign Physiotherapist (Optional)</option>${phyOpts}</select>
+          </div>
+        </div>`).join('')
+      : '<p class="text-slate-400 text-xs py-2">No pending self-registrations in queue.</p>';
+
+    const creds = await api.credentialRequests();
+    const pending = (creds || []).filter(c => c.status === 'pending');
+    document.getElementById('credList').innerHTML = pending.length
+      ? pending.map(c => `
+        <div class="flex flex-wrap items-center justify-between gap-3 border rounded-2xl p-3.5 bg-care-50/60 border-care-200">
+          <div>
+            <div class="font-bold text-slate-900 text-sm">${c.patient_name || 'Patient'}</div>
+            <div class="text-xs text-slate-500 mt-0.5">Requested by ${c.requested_by_role || 'Doctor'} · ${c.email || 'no email'}</div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="provision('${c.id}','${(c.email||'').replace(/'/g,'')}')" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition">Issue Credentials</button>
+            <button onclick="rejectCredentialRequest('${c.id}','${(c.patient_name||'Patient').replace(/'/g,'')}')" class="px-3.5 py-1.5 bg-vital-100 text-vital-700 font-bold rounded-xl text-xs hover:bg-vital-200 transition">Decline</button>
+          </div>
+        </div>`).join('')
+      : '<p class="text-slate-400 text-xs py-2">No pending clinician credential requests.</p>';
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function approveReg(userId) {
+  const doctor_id = (document.getElementById('doc_' + userId) || {}).value || null;
+  const physio_id = (document.getElementById('phy_' + userId) || {}).value || null;
+  try {
+    await api.approveRegistration(userId, { doctor_id, physio_id });
+    load();
+  } catch (e) {
+    alert('Approve failed: ' + e.message);
+  }
+}
+
+async function rejectReg(userId, name) {
+  if (!confirm('Decline registration for ' + name + '? They will no longer be able to sign in.')) return;
+  const reason = prompt('Optional reason:', '') || '';
+  try {
+    await api.rejectRegistration(userId, { reason });
+    load();
+  } catch (e) {
+    alert('Reject failed: ' + e.message);
+  }
+}
+
+async function rejectCredentialRequest(reqId, patientName) {
+  const confirmed = confirm(
+    'Reject login request for ' + patientName + '?\n\n' +
+    'The patient clinical record will remain, but the login request will be removed.'
+  );
+  if (!confirmed) return;
+  try {
+    await api.deleteCredentialRequest(reqId);
+    alert('Login request rejected successfully.');
+    load();
+  } catch (e) {
+    alert('Failed to reject login request: ' + e.message);
+  }
+}
+
+async function provision(reqId, emailHint) {
+  const email = prompt('Login email for patient:', emailHint || '');
+  if (!email) return;
+  const password = prompt('Temporary password:', 'Welcome@123') || 'Welcome@123';
+  try {
+    await api.provisionCredentials(reqId, { email, password });
+    alert('Credentials issued successfully.\nEmail: ' + email + '\nPassword: ' + password);
+    load();
+  } catch (e) {
+    alert('Failed: ' + e.message);
+  }
+}
+
+function renderUsers() {
+  const filter = document.getElementById('roleFilter').value;
+  const list = filter ? users.filter(u => u.role === filter) : users;
+  document.getElementById('userRows').innerHTML = list.map(u => {
+    let roleBadge = 'bg-slate-100 text-slate-700';
+    if (u.role === 'doctor') roleBadge = 'bg-clinical-100 text-clinical-800 border border-clinical-200';
+    else if (u.role === 'physiotherapist') roleBadge = 'bg-healing-100 text-healing-800 border border-healing-200';
+    else if (u.role === 'patient') roleBadge = 'bg-teal-100 text-teal-800 border border-teal-200';
+    else if (u.role === 'admin') roleBadge = 'bg-slate-800 text-white';
+
+    return `
+      <tr class="border-b border-slate-50 py-2">
+        <td class="py-2.5 pr-2 font-bold text-slate-800">${u.name || '–'}</td>
+        <td class="py-2.5 pr-2"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${roleBadge}">${u.role}</span></td>
+        <td class="py-2.5 pr-2"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${u.approval_status==='pending'?'bg-care-100 text-care-800':u.approval_status==='rejected'?'bg-vital-100 text-vital-800':'bg-healing-50 text-healing-700'}">${u.role==='patient' ? (u.approval_status || 'approved') : 'active'}</span></td>
+        <td class="py-2.5 pr-2 text-slate-500 text-xs">${u.email || ''}</td>
+        <td class="py-2.5">
+          <button onclick="editUser('${u.id}')" class="text-xs font-bold text-teal-600 mr-2.5 hover:underline">Edit</button>
+          <button onclick="delUser('${u.id}')" class="text-xs font-bold text-vital-600 hover:underline">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="5" class="py-4 text-slate-400 text-center">No users found</td></tr>';
+}
+
+function renderComplaints(list) {
+  document.getElementById('complaintList').innerHTML = list.length ? list.map(c => `
+    <div class="border rounded-2xl p-4 ${c.status==='open'?'border-vital-200 bg-vital-50/40':'border-slate-200 bg-white'} shadow-sm">
+      <div class="flex justify-between items-start gap-2">
+        <div>
+          <div class="font-bold text-slate-900 text-sm">${c.subject || 'Care Report'}</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">By ${c.filed_by_name || ''} (${c.filed_by_role || ''}) → ${c.against_role || ''}</div>
+        </div>
+        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${c.severity==='high'?'bg-vital-500 text-white':'bg-slate-100 text-slate-600'}">${c.severity || 'medium'}</span>
+      </div>
+      <p class="text-xs text-slate-700 mt-2 leading-relaxed">${c.description || ''}</p>
+      <div class="mt-3 flex flex-wrap gap-2 items-center text-xs">
+        <span class="text-slate-500">Status: <b class="capitalize text-slate-800">${c.status}</b></span>
+        <select onchange="setComplaintStatus('${c.id}', this.value)" class="border border-slate-200 rounded-xl px-2 py-1 bg-white text-xs">
+          <option value="open" ${c.status==='open'?'selected':''}>Open</option>
+          <option value="under_review" ${c.status==='under_review'?'selected':''}>Under Review</option>
+          <option value="resolved" ${c.status==='resolved'?'selected':''}>Resolved</option>
+          <option value="dismissed" ${c.status==='dismissed'?'selected':''}>Dismissed</option>
+        </select>
+      </div>
+    </div>
+  `).join('') : '<p class="text-xs text-slate-400 py-3">No care reports or complaints filed.</p>';
+}
+
+function showUserModal() {
+  editUserId = null;
+  document.getElementById('userModalTitle').textContent = 'Add Hospital Staff / User';
+  document.getElementById('uName').value = '';
+  document.getElementById('uEmail').value = '';
+  document.getElementById('uPassword').value = 'password123';
+  document.getElementById('uRole').value = 'doctor';
+  document.getElementById('uSpec').value = '';
+  document.getElementById('uAge').value = '';
+  document.getElementById('userModal').classList.remove('hidden');
+  document.getElementById('userModal').classList.add('flex');
+}
+function closeUserModal() {
+  document.getElementById('userModal').classList.add('hidden');
+  document.getElementById('userModal').classList.remove('flex');
+}
+function editUser(id) {
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  editUserId = id;
+  document.getElementById('userModalTitle').textContent = 'Edit Hospital User';
+  document.getElementById('uName').value = u.name || '';
+  document.getElementById('uEmail').value = u.email || '';
+  document.getElementById('uPassword').value = '';
+  document.getElementById('uRole').value = u.role;
+  document.getElementById('uSpec').value = u.specialty || u.license || '';
+  document.getElementById('uAge').value = u.age || '';
+  document.getElementById('userModal').classList.remove('hidden');
+  document.getElementById('userModal').classList.add('flex');
+}
+async function saveUser() {
+  const body = {
+    name: document.getElementById('uName').value.trim(),
+    email: document.getElementById('uEmail').value.trim(),
+    role: document.getElementById('uRole').value,
+    password: document.getElementById('uPassword').value || undefined,
+    specialty: document.getElementById('uSpec').value.trim() || undefined,
+    license: document.getElementById('uSpec').value.trim() || undefined,
+    age: parseInt(document.getElementById('uAge').value) || undefined,
+  };
+  if (!body.name || !body.email) { alert('Name and email required'); return; }
+  try {
+    if (editUserId) await api.adminUpdateUser(editUserId, body);
+    else {
+      if (!body.password) body.password = 'password123';
+      await api.adminCreateUser(body);
+    }
+    closeUserModal();
+    load();
+  } catch (e) { alert(e.message); }
+}
+async function delUser(id) {
+  if (!confirm('Permanently remove this user?')) return;
+  try {
+    await api.adminDeleteUser(id);
+    load();
+  } catch (e) { alert(e.message); }
+}
+async function setComplaintStatus(id, status) {
+  try {
+    await api.updateComplaint(id, { status });
+    load();
+  } catch (e) { alert(e.message); }
+}
+
+load();
+</script>
+
+<link rel="stylesheet" href="/static/chat-widget.css">
+<script src="/static/chat-widget.js" defer></script>
+{% endblock %}

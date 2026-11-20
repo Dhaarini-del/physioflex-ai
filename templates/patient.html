@@ -1,0 +1,1612 @@
+{% extends "base.html" %}
+{% block title %}Patient Portal – PhysioFlex Hospital Care{% endblock %}
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-50/60">
+  <!-- Top Hospital Header -->
+  <div class="bg-gradient-to-r from-teal-700 via-clinical-700 to-teal-800 text-white text-xs py-1 px-4 text-center hidden sm:flex items-center justify-center gap-2">
+    <span>✚ Hospital-Supervised Digital Physiotherapy & Rehabilitation Network</span>
+    <span class="opacity-75">· 24/7 Clinical Care Team Available</span>
+  </div>
+
+  <nav class="glass sticky top-0 z-20 border-b border-teal-100">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-teal-500 via-clinical-600 to-teal-700 flex items-center justify-center text-white font-display font-extrabold shadow-sm med-pulse">
+          ✚
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-bold text-lg text-slate-900 tracking-tight">Physio<span class="text-teal-600">Flex</span></span>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200">Patient Care</span>
+          </div>
+          <div class="flex items-center gap-1.5 -mt-0.5">
+            <span id="liveDot" class="text-xs text-slate-400 font-medium">● connecting…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap justify-end">
+        <!-- Language Selector -->
+        <div class="flex items-center gap-1 bg-white border border-teal-200 rounded-xl px-2.5 py-1 shadow-sm text-xs">
+          <span>🌐</span>
+          <select id="langSelect" onchange="setLang(this.value)" class="bg-transparent text-slate-700 font-medium outline-none cursor-pointer">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="bn">বাংলা</option>
+            <option value="te">తెలుగు</option>
+            <option value="mr">मराठी</option>
+            <option value="ta">தமிழ்</option>
+            <option value="gu">ગુજરાતી</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="ml">മലയാളം</option>
+            <option value="pa">ਪੰਜਾਬੀ</option>
+            <option value="or">ଓଡ଼ିଆ</option>
+            <option value="as">অসমীয়া</option>
+            <option value="ur">اردو</option>
+          </select>
+        </div>
+
+        <button onclick="openConsentModal()" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition flex items-center gap-1">
+          <span>🔒</span> Privacy &amp; Consent
+        </button>
+
+        <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-teal-50 rounded-xl border border-teal-200/70 text-xs text-teal-800">
+          <span class="text-sm">👤</span>
+          <span class="font-bold" id="userName">Patient</span>
+        </div>
+
+        <button onclick="openComplaintModal()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-vital-600 hover:bg-vital-50 transition border border-vital-200/60" title="Report an issue or clinician concern">
+          🚨 Report
+        </button>
+        <button onclick="logout()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition" data-i18n="signout">
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-6 sm:py-8">
+    <!-- Pending Approval Notice Banner -->
+    <div id="pendingBanner" class="hidden mb-6 rounded-2xl border-2 border-care-300 bg-care-50/90 p-5 shadow-sm">
+      <div class="flex items-start gap-3">
+        <div class="text-2xl">⏳</div>
+        <div>
+          <h3 class="font-bold text-care-900 text-base">Waiting for Clinical Administrator Approval</h3>
+          <p class="text-sm text-care-800 mt-1">
+            You can browse the exercise library and hospital health tips below. Live camera sessions, video calls, and clinician messaging will unlock once our clinic team approves your account.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time Clinical Feedback Notification Banner -->
+    <div id="reportFeedbackAlert" class="hidden mb-6 rounded-3xl p-5 bg-gradient-to-r from-healing-500 via-teal-600 to-clinical-600 text-white shadow-lg flex items-center justify-between gap-4 animate-pulse">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl">📋</div>
+        <div>
+          <div class="font-bold text-sm sm:text-base" id="reportAlertTitle">New Clinical Evaluation Report Released!</div>
+          <p class="text-xs text-teal-100" id="reportAlertBody">Your attending clinician has published an official progress evaluation.</p>
+        </div>
+      </div>
+      <button onclick="scrollToReports()" class="shrink-0 px-4 py-2 bg-white text-teal-800 font-bold rounded-xl text-xs sm:text-sm shadow-md hover:bg-teal-50 transition">
+        View &amp; Download PDF ↓
+      </button>
+    </div>
+
+    <!-- Patient Hero Greeting & Action Ribbon -->
+    <div class="rounded-3xl bg-gradient-to-r from-teal-600 via-clinical-600 to-rehab-600 p-6 sm:p-8 text-white shadow-xl shadow-teal-900/10 mb-8 relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold text-teal-50 mb-3">
+            <span>🏥</span> St. Jude Physical Rehabilitation Center
+          </div>
+          <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-white" data-i18n="my_recovery">
+            My Recovery Journey
+          </h1>
+          <p class="text-teal-100 text-sm mt-1 max-w-xl">
+            Supervised by your hospital physiatrist and physiotherapist. Complete your exercises daily and consult your care team via live video.
+          </p>
+        </div>
+
+        <div id="clinicianActions" class="flex flex-wrap gap-2.5">
+          <button onclick="startVideoCall('doctor')" class="px-4 py-2.5 bg-clinical-500 hover:bg-clinical-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md transition flex items-center gap-1.5">
+            <span>📹</span> Video Call Doctor
+          </button>
+          <button onclick="startVideoCall('physiotherapist')" class="px-4 py-2.5 bg-healing-500 hover:bg-healing-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md transition flex items-center gap-1.5">
+            <span>📹</span> Video Call Physio
+          </button>
+          <button onclick="openAlertModal()" class="px-4 py-2.5 bg-vital-500 hover:bg-vital-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-vital-600/30 transition flex items-center gap-1.5">
+            <span>🚨</span> <span data-i18n="alert_clinician">Alert Care Team</span>
+          </button>
+          <button onclick="openBookingModal()" class="px-4 py-2.5 bg-white/95 hover:bg-white text-clinical-800 font-bold rounded-xl text-xs sm:text-sm shadow-md transition flex items-center gap-1.5">
+            <span>📅</span> <span data-i18n="book_live">Book Live Session</span>
+          </button>
+          <button onclick="openVoiceModal()" class="px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold rounded-xl text-xs sm:text-sm border border-white/30 transition flex items-center gap-1.5">
+            <span>🎙️</span> <span data-i18n="voice_msg">Voice Note</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time Live Alert Toast -->
+    <div id="liveFeed" class="mb-6 hidden">
+      <div class="bg-gradient-to-r from-teal-500 to-clinical-600 text-white font-semibold rounded-2xl px-5 py-3 text-sm shadow-lg flex items-center gap-3 animate-bounce" id="liveMsg">
+        🔔 New clinical notification received
+      </div>
+    </div>
+
+    <!-- 4 Colorful Patient Vital & Progress Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+      <!-- Pain Card -->
+      <div class="card p-5 border-l-4 border-l-vital-500 bg-gradient-to-br from-white via-vital-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider" data-i18n="pain">Pain Level</span>
+          <div class="w-8 h-8 rounded-xl bg-vital-100 text-vital-600 flex items-center justify-center text-sm">
+            💓
+          </div>
+        </div>
+        <div id="statPain" class="font-display text-3xl font-extrabold text-vital-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">0-3 Mild · 4-6 Mod · 7-10 High</div>
+      </div>
+
+      <!-- ROM Joint Angle Card -->
+      <div class="card p-5 border-l-4 border-l-clinical-500 bg-gradient-to-br from-white via-clinical-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Range of Motion</span>
+          <div class="w-8 h-8 rounded-xl bg-clinical-100 text-clinical-600 flex items-center justify-center text-sm">
+            📐
+          </div>
+        </div>
+        <div id="statRom" class="font-display text-3xl font-extrabold text-clinical-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">Current active joint angle</div>
+      </div>
+
+      <!-- Adherence Card -->
+      <div class="card p-5 border-l-4 border-l-healing-500 bg-gradient-to-br from-white via-healing-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider" data-i18n="adherence">Adherence</span>
+          <div class="w-8 h-8 rounded-xl bg-healing-100 text-healing-600 flex items-center justify-center text-sm">
+            🌟
+          </div>
+        </div>
+        <div id="statAdherence" class="font-display text-3xl font-extrabold text-healing-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">Weekly consistency score</div>
+      </div>
+
+      <!-- Evaluation Score Card -->
+      <div class="card p-5 border-l-4 border-l-rehab-500 bg-gradient-to-br from-white via-rehab-50/20 to-white">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider" data-i18n="eval_score">Clinical Score</span>
+          <div class="w-8 h-8 rounded-xl bg-rehab-100 text-rehab-600 flex items-center justify-center text-sm">
+            🛡️
+          </div>
+        </div>
+        <div id="statEval" class="font-display text-3xl font-extrabold text-rehab-600 mt-1">–</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-medium">Care team overall assessment</div>
+      </div>
+    </div>
+
+    <!-- FEATURE 1: Attractive Data Visuals (Line Graph, Bar Graph, Pie Chart) -->
+    <div class="card p-6 mb-8 border-t-4 border-t-clinical-500">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-clinical-100 text-clinical-800 text-xs font-bold mb-1">
+            📊 Biomechanical Recovery Visuals
+          </div>
+          <h2 class="font-display font-bold text-xl text-slate-900">
+            Recovery Telemetry &amp; Progress Analytics
+          </h2>
+        </div>
+        <span class="text-xs text-slate-500 font-medium">Telemetry synchronized across Doctor, Physio &amp; Patient portals</span>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- 1. Line Graph: ROM & Pain Trajectory -->
+        <div class="p-4 rounded-2xl bg-white border border-teal-100 shadow-sm flex flex-col">
+          <div class="font-bold text-sm text-slate-900 mb-1 flex items-center justify-between">
+            <span>📈 Joint ROM &amp; Pain Over Time</span>
+            <span class="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full font-bold">Line Graph</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-3">Flexion progress (°) vs Pain level (0-10)</p>
+          <div class="relative flex-1 min-h-[220px]">
+            <canvas id="chartRomPain"></canvas>
+          </div>
+        </div>
+
+        <!-- 2. Bar Graph: Repetitions Completed -->
+        <div class="p-4 rounded-2xl bg-white border border-teal-100 shadow-sm flex flex-col">
+          <div class="font-bold text-sm text-slate-900 mb-1 flex items-center justify-between">
+            <span>📊 Repetition Volume per Session</span>
+            <span class="text-[10px] text-clinical-700 bg-clinical-50 px-2 py-0.5 rounded-full font-bold">Bar Graph</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-3">Completed vs target reps</p>
+          <div class="relative flex-1 min-h-[220px]">
+            <canvas id="chartRepetitions"></canvas>
+          </div>
+        </div>
+
+        <!-- 3. Pie/Doughnut Chart: Pose Quality Breakdown -->
+        <div class="p-4 rounded-2xl bg-white border border-teal-100 shadow-sm flex flex-col">
+          <div class="font-bold text-sm text-slate-900 mb-1 flex items-center justify-between">
+            <span>🍩 Movement Quality Distribution</span>
+            <span class="text-[10px] text-healing-700 bg-healing-50 px-2 py-0.5 rounded-full font-bold">Pie Chart</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-3">Accuracy of joint execution</p>
+          <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
+            <canvas id="chartQuality"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURE 2 & 3: Official Clinical Reports from Doctor & Physio + PDF Download -->
+    <div id="reportsSection" class="card p-6 mb-8 border-t-4 border-t-teal-500">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-base">📄</div>
+          <h2 class="font-display font-bold text-xl text-slate-900">
+            Doctor &amp; Physiotherapist Clinical Reports
+          </h2>
+        </div>
+        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800">
+          Published Clinician Reports
+        </span>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">
+        Formal evaluation and rehabilitation reports authored by your care team. View digital signature and download in PDF format.
+      </p>
+
+      <div id="clinicalReportsList" class="space-y-3.5">
+        <div class="text-center py-6 text-slate-400 text-xs">Loading clinical reports…</div>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Content Grid -->
+    <div class="grid lg:grid-cols-12 gap-8">
+      <!-- Left Column: Prescribed Exercises (Col 7) -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="card p-6 border-t-4 border-t-teal-500">
+          <div class="flex items-center justify-between mb-2">
+            <h2 id="exerciseHeading" class="font-display text-xl font-bold text-slate-900" data-i18n="assigned_ex">
+              Prescribed Exercises – Select to Begin
+            </h2>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800">
+              Camera Pose Tracked
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 mb-5">
+            Your exercises are backed by clinical datasets. Tap <strong>📺 Watch Demo</strong> to review technique or <strong>Start</strong> with your camera.
+          </p>
+          
+          <div id="exerciseSelectList" class="space-y-3">
+            <div class="text-center py-8 text-slate-400">Loading your prescribed exercises…</div>
+          </div>
+          
+          <p id="noPlan" class="text-sm text-slate-400 hidden mt-4 text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200" data-i18n="no_plan">
+            No active plan assigned yet. Your physiotherapist will assign targeted routines shortly.
+          </p>
+        </div>
+
+        <!-- Progress Evaluation Card -->
+        <div class="card p-6 border-t-4 border-t-rehab-500">
+          <div class="flex items-center gap-2.5 mb-3">
+            <div class="w-8 h-8 rounded-xl bg-rehab-100 text-rehab-700 flex items-center justify-center text-base">
+              📋
+            </div>
+            <h2 class="font-display font-bold text-lg text-slate-900" data-i18n="progress_eval">
+              Clinical Progress Evaluation
+            </h2>
+          </div>
+          <div id="evalBox" class="text-sm text-slate-600 bg-rehab-50/40 rounded-2xl p-4 border border-rehab-100">
+            –
+          </div>
+        </div>
+
+        <!-- Recent Exercise Sessions Card -->
+        <div class="card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-clinical-100 text-clinical-700 flex items-center justify-center text-base">
+                📈
+              </div>
+              <h2 class="font-display font-bold text-lg text-slate-900" data-i18n="recent_sessions">
+                Recent Workout Sessions
+              </h2>
+            </div>
+          </div>
+          <div id="sessionList" class="space-y-2 text-sm divide-y divide-slate-100"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Schedules, Messages & Tips (Col 5) -->
+      <div class="lg:col-span-5 space-y-6">
+        <!-- Schedules & Hospital Visits -->
+        <div class="card p-6 border-t-4 border-t-clinical-500">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-clinical-100 text-clinical-700 flex items-center justify-center text-base">
+                📅
+              </div>
+              <h2 class="font-display font-bold text-lg text-slate-900" data-i18n="schedules">
+                Schedules &amp; Hospital Visits
+              </h2>
+            </div>
+          </div>
+          <div id="scheduleList" class="space-y-2.5 text-sm"></div>
+        </div>
+
+        <!-- Care Team Messages Inbox -->
+        <div class="card p-6 border-t-4 border-t-teal-500">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-base">
+                💬
+              </div>
+              <h2 class="font-display font-bold text-lg text-slate-900">
+                Messages from Care Team
+              </h2>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">Direct guidance from your attending doctor &amp; physiotherapist</p>
+          <div id="inboxList" class="space-y-2.5 text-sm max-h-60 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Patient Voice Notes Sent -->
+        <div class="card p-6">
+          <div class="flex items-center gap-2.5 mb-3">
+            <div class="w-8 h-8 rounded-xl bg-rehab-100 text-rehab-700 flex items-center justify-center text-base">
+              🎙️
+            </div>
+            <h2 class="font-display font-bold text-lg text-slate-900">
+              My Sent Messages
+            </h2>
+          </div>
+          <div id="myMsgList" class="space-y-2 text-sm max-h-48 overflow-y-auto">–</div>
+        </div>
+
+        <!-- Doctor-Approved Health Tips -->
+        <div class="card p-6 border-t-4 border-t-healing-500 bg-gradient-to-b from-white to-healing-50/20">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-8 h-8 rounded-xl bg-healing-100 text-healing-700 flex items-center justify-center text-base">
+              🌿
+            </div>
+            <div>
+              <h2 class="font-display font-bold text-lg text-slate-900">
+                Hospital Health &amp; Recovery Tips
+              </h2>
+              <span class="text-xs text-healing-700 font-medium">Physician curated self-care</span>
+            </div>
+          </div>
+          <div id="tipsList" class="space-y-3.5 text-sm"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Emergency Footer Bar -->
+  <footer class="mt-auto border-t border-teal-100 bg-white py-6">
+    <div class="max-w-7xl mx-auto px-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <span class="text-teal-600 font-bold">✚ PhysioFlex Medical Portal</span>
+        <span>· Supervised by St. Jude Physical Medicine &amp; Rehab Department</span>
+      </div>
+      <div>
+        <span>🚨 In emergency: Call 911 / 112 immediately.</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- MODAL: Exercise Technique & Demo Video -->
+<div id="demoVideoModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-teal-100 overflow-hidden">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-xl">📺</div>
+        <div>
+          <h3 id="demoTitle" class="font-display font-bold text-lg text-slate-900">Exercise Technique Demo</h3>
+          <span id="demoBodyPart" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">Rehabilitation</span>
+        </div>
+      </div>
+      <button onclick="closeModals()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-lg">×</button>
+    </div>
+
+    <!-- Responsive Video Container -->
+    <div class="relative rounded-2xl overflow-hidden bg-black aspect-video mb-4 shadow-inner">
+      <iframe id="demoVideoFrame" src="" class="w-full h-full" title="Exercise demonstration video" frameborder="0" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+    <p class="text-xs text-slate-500 mb-4">If the embedded demo is blocked or unavailable, <a id="demoVideoFallback" class="font-bold text-teal-700 underline" href="https://www.youtube.com/results?search_query=physiotherapy+exercise" target="_blank" rel="noopener noreferrer">open matching exercise videos on YouTube</a>. The search link remains available even if an individual video has been removed.</p>
+
+    <!-- Coaching Cues & Instructions -->
+    <div class="bg-teal-50/50 rounded-2xl p-4 border border-teal-100 mb-4">
+      <div class="font-bold text-xs uppercase tracking-wider text-teal-800 mb-2">Physician Coaching Cues &amp; Alignment:</div>
+      <ul id="demoStepsList" class="space-y-1.5 text-xs text-slate-700 list-disc pl-4"></ul>
+    </div>
+
+    <div class="flex items-center justify-between">
+      <span class="text-xs text-slate-400">Position yourself safely before beginning.</span>
+      <div class="flex gap-2">
+        <button onclick="closeModals()" class="btn-secondary text-sm">Close</button>
+        <a id="demoStartBtn" href="#" class="btn-primary text-sm font-bold">Start Guided Session 🏃</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Live Video Call Consultation Room -->
+<div id="videoCallModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+  <div class="bg-slate-900 text-white rounded-3xl max-w-4xl w-full p-6 shadow-2xl border border-teal-500/30 flex flex-col">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+        <div>
+          <h3 class="font-display font-bold text-lg text-white" id="callTargetName">Live Video Consultation</h3>
+          <span class="text-xs text-teal-300">Encrypted Clinical WebRTC Session · Connected to Care Team</span>
+        </div>
+      </div>
+      <div class="text-xs font-mono text-slate-400 bg-slate-800 px-3 py-1 rounded-full" id="callTimer">00:00</div>
+    </div>
+
+    <!-- Video Windows Grid -->
+    <div class="grid md:grid-cols-2 gap-4 aspect-video bg-black rounded-2xl overflow-hidden relative mb-4">
+      <!-- Remote Clinician Window -->
+      <div class="relative bg-slate-800 flex items-center justify-center overflow-hidden">
+        <video id="remoteVideo" class="w-full h-full object-cover" autoplay playsinline></video>
+        <div id="remotePlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-800/90">
+          <div class="w-16 h-16 rounded-full bg-teal-500/20 text-teal-300 flex items-center justify-center text-3xl mb-2 med-pulse">👨‍⚕️</div>
+          <span class="font-bold text-sm text-slate-200" id="remoteClinicianLabel">Attending Clinician</span>
+          <span class="text-xs text-teal-300 mt-1">Connecting video stream…</span>
+        </div>
+        <span class="absolute bottom-3 left-3 text-[11px] font-bold px-2 py-0.5 rounded-md bg-black/60 text-white">Clinician</span>
+      </div>
+
+      <!-- Local Patient Window -->
+      <div class="relative bg-slate-900 flex items-center justify-center overflow-hidden">
+        <video id="localVideo" class="w-full h-full object-cover -scale-x-100" autoplay playsinline muted></video>
+        <div id="localPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+          <div class="text-3xl mb-1">📷</div>
+          <span class="text-xs">Patient camera feed</span>
+        </div>
+        <span class="absolute bottom-3 left-3 text-[11px] font-bold px-2 py-0.5 rounded-md bg-black/60 text-white">You (Patient)</span>
+      </div>
+    </div>
+
+    <!-- Video Call Controls -->
+    <div class="flex items-center justify-center gap-4 pt-2">
+      <button id="btnToggleMic" onclick="toggleCallMic()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-xl transition" title="Mute/Unmute Mic">
+        🎙️
+      </button>
+      <button id="btnToggleCam" onclick="toggleCallCam()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-xl transition" title="Turn Camera On/Off">
+        📹
+      </button>
+      <button onclick="endVideoCall()" class="px-6 py-3 bg-vital-600 hover:bg-vital-700 text-white font-bold rounded-2xl text-sm shadow-lg shadow-vital-600/30 transition flex items-center gap-2">
+        <span>🛑</span> End Consultation
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Privacy & Consent Settings -->
+<div id="consentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-teal-100">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-xl">🔒</div>
+      <div>
+        <h3 class="font-display font-bold text-lg text-slate-900">Privacy &amp; Data Consent</h3>
+        <p class="text-xs text-slate-500">Audit-logged clinical privacy controls.</p>
+      </div>
+    </div>
+
+    <div class="space-y-4 text-xs sm:text-sm mb-6">
+      <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer">
+        <input type="checkbox" id="csTelemetry" checked class="mt-0.5 w-4 h-4 text-teal-600 rounded" />
+        <div>
+          <strong class="text-slate-800">Biomechanical Telemetry Sharing</strong>
+          <p class="text-xs text-slate-500 mt-0.5">Allow joint angle measurements, repetitions, and movement quality to sync with your physician &amp; PT.</p>
+        </div>
+      </label>
+
+      <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer">
+        <input type="checkbox" id="csAids" checked class="mt-0.5 w-4 h-4 text-teal-600 rounded" />
+        <div>
+          <strong class="text-slate-800">Automated Decision Support</strong>
+          <p class="text-xs text-slate-500 mt-0.5">Enable AI coaching tips, pain correlation graphs, and posture deviation alerts.</p>
+        </div>
+      </label>
+
+      <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer">
+        <input type="checkbox" id="csVideo" checked class="mt-0.5 w-4 h-4 text-teal-600 rounded" />
+        <div>
+          <strong class="text-slate-800">Live Video Consultation</strong>
+          <p class="text-xs text-slate-500 mt-0.5">Permit direct peer-to-peer audio/video check-ins with your assigned care team.</p>
+        </div>
+      </label>
+    </div>
+
+    <div class="flex gap-2.5 justify-end">
+      <button onclick="closeModals()" class="btn-secondary text-sm">Cancel</button>
+      <button onclick="saveConsent()" class="btn-primary text-sm font-bold">Save Consent Preferences</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Printable / Downloadable Hospital Medical Report (PDF View) -->
+<div id="reportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto p-8 shadow-2xl border border-teal-100 flex flex-col">
+    <!-- Printable Document Section -->
+    <div id="reportPrintArea" class="bg-white p-6 rounded-2xl border border-slate-200">
+      <!-- Hospital Letterhead -->
+      <div class="flex items-center justify-between border-b-2 border-teal-600 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-600 to-clinical-600 text-white flex items-center justify-center font-bold text-2xl">✚</div>
+          <div>
+            <h2 class="font-display font-extrabold text-xl text-slate-900 tracking-tight">PhysioFlex</h2>
+            <p class="text-xs text-teal-800 font-semibold">Rehabilitation Progress Record</p>
+          </div>
+        </div>
+        <div class="text-right text-xs text-slate-500">
+          <div class="font-bold text-slate-800" id="pdfReportId">REP-0000</div>
+          <div id="pdfReportDate">Date: 2026-10-13</div>
+        </div>
+      </div>
+
+      <!-- Report Title -->
+      <div class="text-center mb-6">
+        <h3 class="font-display font-extrabold text-lg text-slate-900 uppercase tracking-wider" id="pdfReportHeading">Clinical Rehabilitation Report</h3>
+        <p class="text-xs text-slate-500" id="pdfReportSubtitle">Clinical Evaluation &amp; Biomechanical Progress Assessment</p>
+      </div>
+
+      <!-- Patient & Clinician Metadata -->
+      <div class="grid grid-cols-2 gap-4 bg-teal-50/40 p-4 rounded-xl border border-teal-100 text-xs mb-6">
+        <div><strong>Patient Name:</strong> <span id="pdfPatientName">–</span></div>
+        <div><strong>Attending Clinician:</strong> <span id="pdfClinicianName">–</span></div>
+        <div><strong>Clinical Score / Grade:</strong> <span id="pdfScore" class="font-bold text-teal-700">–</span></div>
+        <div><strong>Recovery Stage:</strong> <span id="pdfStage">–</span></div>
+      </div>
+
+      <!-- Dynamic Report Body Content -->
+      <div id="pdfReportContent" class="space-y-4 text-xs text-slate-700 leading-relaxed mb-6"></div>
+
+      <!-- Signature Block -->
+      <div class="pt-6 border-t border-slate-200 flex justify-between items-end text-xs">
+        <div>
+          <span class="text-[10px] text-slate-400 block">Generated from PhysioFlex</span>
+          <span class="text-[10px] text-slate-400">Not a certified medical record; verify with your treating clinician</span>
+        </div>
+        <div class="text-right">
+          <div class="font-display font-bold text-teal-800" id="pdfSignature">Dr. / PT Signature</div>
+          <div class="text-[10px] text-slate-400">Clinician-entered signature (not cryptographically verified)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Actions: Download PDF, Print, Close -->
+    <div class="mt-6 flex flex-wrap gap-3 justify-end items-center">
+      <button onclick="closeModals()" class="btn-secondary text-sm">Close</button>
+      <button onclick="downloadReportPdf()" class="btn-primary text-sm font-bold flex items-center gap-1.5 shadow-md">
+        <span>📥</span> Download PDF Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Alert clinician -->
+<div id="alertModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-vital-100">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-2xl bg-vital-100 text-vital-600 flex items-center justify-center text-xl">🚨</div>
+      <div>
+        <h3 class="font-display font-bold text-lg text-slate-900">Alert Doctor &amp; Physiotherapist</h3>
+        <p class="text-xs text-slate-500">Your care team will receive this high-priority alert immediately.</p>
+      </div>
+    </div>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Alert Category</label>
+    <select id="aType" class="input mb-3">
+      <option value="pain">Severe / Sudden Pain</option>
+      <option value="abnormality">Swelling / Joint Abnormality</option>
+      <option value="emergency">Urgent Clinical Concern</option>
+      <option value="general">General Exercise Discomfort</option>
+    </select>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Severity Level</label>
+    <select id="aSev" class="input mb-3">
+      <option value="low">Low (Notice)</option>
+      <option value="medium" selected>Medium (Needs Review)</option>
+      <option value="high">High (Immediate Attention)</option>
+    </select>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Describe What You Feel</label>
+    <textarea id="aMsg" rows="3" class="input mb-4" placeholder="Describe the discomfort, location, when it started…"></textarea>
+
+    <div class="flex gap-2.5 justify-end">
+      <button onclick="closeModals()" class="btn-secondary text-sm">Cancel</button>
+      <button onclick="submitAlert()" class="btn-rose text-sm font-bold">Send Alert Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Booking -->
+<div id="bookingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-clinical-100">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-2xl bg-clinical-100 text-clinical-600 flex items-center justify-center text-xl">📅</div>
+      <div>
+        <h3 class="font-display font-bold text-lg text-slate-900">Book Live Session</h3>
+        <p class="text-xs text-slate-500">Request a live video evaluation with your clinician.</p>
+      </div>
+    </div>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Select Clinician</label>
+    <select id="bRole" class="input mb-3">
+      <option value="physiotherapist">Physiotherapist</option>
+      <option value="doctor">Attending Physician</option>
+    </select>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Preferred Date &amp; Time</label>
+    <input id="bDt" type="datetime-local" class="input mb-3" />
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Reason for Visit</label>
+    <input id="bReason" class="input mb-3" placeholder="e.g. Post-surgery week 4 ROM review" />
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Notes / Questions for Clinician</label>
+    <textarea id="bNotes" rows="2" class="input mb-4" placeholder="Optional notes…"></textarea>
+
+    <div class="flex gap-2.5 justify-end">
+      <button onclick="closeModals()" class="btn-secondary text-sm">Cancel</button>
+      <button onclick="submitBooking()" class="btn-primary text-sm font-bold">Request Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Voice Message -->
+<div id="voiceModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-rehab-100">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-2xl bg-rehab-100 text-rehab-600 flex items-center justify-center text-xl">🎙️</div>
+      <div>
+        <h3 class="font-display font-bold text-lg text-slate-900">Send Voice Note</h3>
+        <p class="text-xs text-slate-500">Record a short voice note directly to your care team.</p>
+      </div>
+    </div>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Send Note To</label>
+    <select id="vRole" class="input mb-3">
+      <option value="physiotherapist">To Physiotherapist</option>
+      <option value="doctor">To Attending Doctor</option>
+    </select>
+
+    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button id="btnRec" onclick="toggleRec()" class="px-4 py-2 bg-vital-500 hover:bg-vital-600 text-white font-bold rounded-xl text-sm transition">
+          ● Record
+        </button>
+        <span id="recStatus" class="text-xs text-slate-500 font-semibold">Idle (tap Record)</span>
+      </div>
+    </div>
+
+    <label class="block text-xs font-bold text-slate-600 mb-1">Or Type Message / Transcript</label>
+    <textarea id="vTranscript" rows="2" class="input mb-4" placeholder="Type text here if microphone is unavailable…"></textarea>
+
+    <div class="flex gap-2.5 justify-end">
+      <button onclick="closeModals()" class="btn-secondary text-sm">Cancel</button>
+      <button onclick="submitVoice()" class="btn-primary text-sm font-bold">Send to Clinician</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Report / Complaint -->
+<div id="complaintModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-2xl bg-vital-100 text-vital-600 flex items-center justify-center text-xl">⚖️</div>
+      <div>
+        <h3 class="font-display font-bold text-lg text-slate-900">Hospital Administration Report</h3>
+        <p class="text-xs text-slate-500">Confidential misconduct or care quality grievance.</p>
+      </div>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Reporting Concerning</label>
+        <select id="cAgainstRole" class="input">
+          <option value="doctor">Doctor</option>
+          <option value="physiotherapist">Physiotherapist</option>
+          <option value="other">Clinic Staff / System</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Staff Name (Optional)</label>
+        <input id="cAgainstName" class="input" placeholder="Name if known" />
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Category</label>
+        <select id="cCategory" class="input">
+          <option value="misconduct">Clinical Misconduct</option>
+          <option value="negligence">Negligence / Delayed Response</option>
+          <option value="harassment">Unprofessional Conduct</option>
+          <option value="privacy">Privacy / HIPAA Concern</option>
+          <option value="other">Other Concern</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Subject *</label>
+        <input id="cSubject" class="input" placeholder="Brief subject" />
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Detailed Explanation *</label>
+        <textarea id="cDesc" rows="3" class="input" placeholder="Explain the situation in detail…"></textarea>
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-2.5 justify-end">
+      <button onclick="closeModals()" class="btn-secondary text-sm">Cancel</button>
+      <button onclick="submitComplaint()" class="btn-rose text-sm font-bold">Submit to Admin</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const user = requireAuth(['patient']);
+if (!user) throw new Error('auth');
+document.getElementById('userName').textContent = user.name;
+
+let activePatientData = null;
+let chartRomPainInst = null;
+let chartRepsInst = null;
+let chartQualityInst = null;
+let callStream = null;
+let callTimerInterval = null;
+let callSeconds = 0;
+let exerciseCatalogMap = {};
+
+const I18N = {
+  en: { signout:'Sign out', my_recovery:'My Recovery Journey', alert_clinician:'Alert Care Team', book_live:'Book Live Session', voice_msg:'Voice Note', pain:'Pain Level', adherence:'Adherence', eval_score:'Clinical Score', assigned_ex:'Prescribed Exercises – Select to Begin', no_plan:'No active plan yet. Wait for your physiotherapist to assign exercises.', schedules:'Schedules & Hospital Visits', progress_eval:'Clinical Progress Evaluation', recent_sessions:'Recent Workout Sessions', start:'Start Exercise 🏃' },
+  hi: { signout:'साइन आउट', my_recovery:'मेरी रिकवरी यात्रा', alert_clinician:'केयर टीम अलर्ट', book_live:'लाइव सत्र बुक करें', voice_msg:'वॉइस संदेश', pain:'दर्द का स्तर', adherence:'अनुपालन', eval_score:'मूल्यांकन स्कोर', assigned_ex:'नियत व्यायाम – शुरू करने के लिए चुनें', no_plan:'कोई सक्रिय योजना नहीं है।', schedules:'अनुसूची और विज़िट', progress_eval:'प्रगति मूल्यांकन', recent_sessions:'हाल के सत्र', start:'व्यायाम शुरू करें 🏃' },
+};
+
+function setLang(code) {
+  if (window.PhysioFlexI18n) {
+    window.PhysioFlexI18n.setLanguage(code);
+  }
+  localStorage.setItem('lang', code);
+  localStorage.setItem('physioflex_language', code);
+  const globalSelector = document.getElementById('language-selector');
+  if (globalSelector && globalSelector.value !== code) {
+    globalSelector.value = code;
+  }
+  const langSelect = document.getElementById('langSelect');
+  if (langSelect && langSelect.value !== code) {
+    langSelect.value = code;
+  }
+  window._startLabel = (window.PhysioFlexI18n ? window.PhysioFlexI18n.translate('start') : null) || 'Start Exercise 🏃';
+  load();
+}
+const savedLang = localStorage.getItem('physioflex_language') || localStorage.getItem('lang') || 'en';
+document.getElementById('langSelect').value = savedLang;
+window._startLabel = (window.PhysioFlexI18n ? window.PhysioFlexI18n.translate('start') : null) || 'Start Exercise 🏃';
+
+// Sync global language-selector with patient dropdown
+const globalSelector = document.getElementById('language-selector');
+if (globalSelector) {
+  globalSelector.value = savedLang;
+  globalSelector.addEventListener('change', function() {
+    setLang(this.value);
+  });
+}
+
+function showLive(msg) {
+  document.getElementById('liveMsg').textContent = '🔔 ' + msg;
+  document.getElementById('liveFeed').classList.remove('hidden');
+  setTimeout(() => document.getElementById('liveFeed').classList.add('hidden'), 8000);
+}
+
+connectRealtime('patient', (msg) => {
+  document.getElementById('liveDot').textContent = '● Care Team Connected';
+  document.getElementById('liveDot').className = 'text-xs text-healing-600 font-bold';
+  
+  if (msg.event === 'doctor_report_created' || msg.event === 'physio_report_created') {
+    document.getElementById('reportFeedbackAlert').classList.remove('hidden');
+    document.getElementById('reportAlertTitle').textContent = msg.event === 'doctor_report_created' ? '🩺 Attending Doctor Clinical Evaluation Published!' : '🌿 Physiotherapist Rehab Assessment Published!';
+    document.getElementById('reportAlertBody').textContent = msg.message || 'New official clinical report published for your recovery record.';
+    showLive(msg.message || 'New clinical report available');
+    loadReports();
+  } else if (msg.event === 'video_call_signal' && msg.action === 'initiate') {
+    if (confirm(`📞 Incoming Video Consultation from ${msg.caller_name} (${msg.caller_role}). Accept call now?`)) {
+      openPhysioFlexCall(msg.room_id, 'Consultation with ' + (msg.caller_name || 'Care Team'));
+    }
+  } else if (['schedule_created','plan_created','plan_updated','booking_updated','suggestion_created','voice_message','note_added'].includes(msg.event)) {
+    showLive(msg.message || msg.event);
+    load();
+  }
+});
+
+function closeModals() {
+  ['alertModal','bookingModal','voiceModal','complaintModal','demoVideoModal','videoCallModal','consentModal','reportModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+  });
+  const frame = document.getElementById('demoVideoFrame');
+  if (frame) frame.src = '';
+}
+
+function requireApprovedAction() {
+  const u = JSON.parse(localStorage.getItem('user') || 'null');
+  if (u && u.approval_status === 'pending') {
+    alert('This feature unlocks after clinic administrators approve your account.');
+    return false;
+  }
+  return true;
+}
+
+function openAlertModal() { if (!requireApprovedAction()) return; document.getElementById('alertModal').classList.remove('hidden'); document.getElementById('alertModal').classList.add('flex'); }
+function openBookingModal() { if (!requireApprovedAction()) return; document.getElementById('bookingModal').classList.remove('hidden'); document.getElementById('bookingModal').classList.add('flex'); }
+function openVoiceModal() { if (!requireApprovedAction()) return; document.getElementById('voiceModal').classList.remove('hidden'); document.getElementById('voiceModal').classList.add('flex'); }
+function openComplaintModal() { document.getElementById('complaintModal').classList.remove('hidden'); document.getElementById('complaintModal').classList.add('flex'); }
+function scrollToReports() { document.getElementById('reportsSection').scrollIntoView({ behavior: 'smooth' }); }
+
+/* ==================== FEATURE 1: Attractive Data Visuals (Chart.js) ==================== */
+function renderProgressCharts(sessions, patient) {
+  if (!sessions || !sessions.length) {
+    // Seed sample trend if fresh account
+    sessions = [
+      { date: 'Day 1', max_rom: 85, pain_score: 6, reps_completed: 8, target_reps: 10, quality: 'Compensating' },
+      { date: 'Day 3', max_rom: 95, pain_score: 5, reps_completed: 10, target_reps: 12, quality: 'Fair' },
+      { date: 'Day 5', max_rom: 108, pain_score: 4, reps_completed: 12, target_reps: 12, quality: 'Good' },
+      { date: 'Day 7', max_rom: 118, pain_score: 3, reps_completed: 12, target_reps: 12, quality: 'Good' },
+    ];
+  }
+
+  const labels = sessions.map(s => s.date.slice(-5) || s.date);
+  const romData = sessions.map(s => s.max_rom || 0);
+  const painData = sessions.map(s => s.pain_score ?? 3);
+  const repsData = sessions.map(s => s.reps_completed || 0);
+  const targetRepsData = sessions.map(s => s.target_reps || 12);
+
+  // 1. Line Chart: ROM vs Pain
+  const ctxRom = document.getElementById('chartRomPain');
+  if (ctxRom) {
+    if (chartRomPainInst) chartRomPainInst.destroy();
+    chartRomPainInst = new Chart(ctxRom, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'ROM Flexion (°)',
+            data: romData,
+            borderColor: '#0d9488',
+            backgroundColor: 'rgba(13, 148, 136, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 3,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Pain Level (0-10)',
+            data: painData,
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244, 63, 94, 0.05)',
+            borderDash: [5, 5],
+            tension: 0.35,
+            borderWidth: 2,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { type: 'linear', position: 'left', title: { display: true, text: 'Degrees (°)' } },
+          y1: { type: 'linear', position: 'right', min: 0, max: 10, grid: { drawOnChartArea: false }, title: { display: true, text: 'Pain (VAS)' } }
+        }
+      }
+    });
+  }
+
+  // 2. Bar Chart: Repetitions
+  const ctxReps = document.getElementById('chartRepetitions');
+  if (ctxReps) {
+    if (chartRepsInst) chartRepsInst.destroy();
+    chartRepsInst = new Chart(ctxReps, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Reps Completed',
+            data: repsData,
+            backgroundColor: '#0284c7',
+            borderRadius: 8,
+          },
+          {
+            label: 'Target Reps',
+            data: targetRepsData,
+            backgroundColor: '#e2e8f0',
+            borderRadius: 8,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Repetitions' } }
+        }
+      }
+    });
+  }
+
+  // 3. Pie/Doughnut Chart: Quality breakdown
+  const ctxQ = document.getElementById('chartQuality');
+  if (ctxQ) {
+    let optimal = 0, fair = 0, comp = 0;
+    sessions.forEach(s => {
+      const q = (s.quality || '').toLowerCase();
+      if (q.includes('good') || q.includes('opt')) optimal++;
+      else if (q.includes('fair')) fair++;
+      else comp++;
+    });
+    if (!optimal && !fair && !comp) { optimal = 5; fair = 2; comp = 1; }
+
+    if (chartQualityInst) chartQualityInst.destroy();
+    chartQualityInst = new Chart(ctxQ, {
+      type: 'doughnut',
+      data: {
+        labels: ['Optimal Form', 'Fair Form', 'Compensating'],
+        datasets: [{
+          data: [optimal, fair, comp],
+          backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+        }
+      }
+    });
+  }
+}
+
+/* ==================== FEATURE 2 & 3: Clinical Reports & PDF Download ==================== */
+let currentViewReport = null;
+function escapeReportText(value) {
+  return String(value ?? 'Not recorded').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+async function loadReports() {
+  if (!activePatientData) return;
+  try {
+    const reports = await api.getClinicalReports(activePatientData.id);
+    const box = document.getElementById('clinicalReportsList');
+    if (!reports || !reports.length) {
+      box.innerHTML = `
+        <div class="text-center py-6 text-slate-400 text-xs bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+          No formal clinical evaluation reports authored yet. Your doctor and physiotherapist will publish reports following milestone evaluations.
+        </div>`;
+      return;
+    }
+
+    box.innerHTML = reports.map(r => {
+      const isDoc = r.type === 'doctor_evaluation';
+      const badgeClass = isDoc ? 'bg-clinical-100 text-clinical-800' : 'bg-healing-100 text-healing-800';
+      const icon = isDoc ? '🩺 Physician Clinical Report' : '🌿 PT Rehabilitation Assessment';
+      const author = isDoc ? (r.doctor_name || 'Dr. Attending') : (r.physio_name || 'PT Attending');
+      const score = isDoc ? r.clinical_score : r.functional_mobility_grade;
+      const subtitle = isDoc ? (r.diagnosis || 'Post-Surgical Evaluation') : (`Target ROM: ${r.target_rom_achieved || 'Assessed'}`);
+
+      return `
+        <div class="p-4 rounded-2xl bg-white border border-teal-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-teal-300 transition">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${badgeClass}">${icon}</span>
+              <span class="text-[11px] text-slate-400">${new Date(r.created_at).toLocaleDateString()}</span>
+            </div>
+            <div class="font-bold text-slate-900 text-sm sm:text-base">${subtitle}</div>
+            <div class="text-xs text-slate-500 font-medium">Author: <strong>${author}</strong> · Rating: <span class="text-teal-700 font-bold">${score || 'Certified'}</span></div>
+          </div>
+          <button onclick="viewReport('${r.id}')" class="shrink-0 px-4 py-2 bg-gradient-to-r from-teal-500 to-clinical-600 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-500/20 hover:from-teal-600 hover:to-clinical-700 transition flex items-center gap-1.5">
+            <span>📄</span> View &amp; Download PDF
+          </button>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    console.error('Failed to load reports:', e);
+  }
+}
+
+async function viewReport(reportId) {
+  try {
+    const reports = await api.getClinicalReports(activePatientData.id);
+    const r = reports.find(x => x.id === reportId);
+    if (!r) return;
+    currentViewReport = r;
+
+    const isDoc = r.type === 'doctor_evaluation';
+    document.getElementById('pdfReportId').textContent = r.id.toUpperCase();
+    document.getElementById('pdfReportDate').textContent = 'Date: ' + new Date(r.created_at).toLocaleDateString();
+    document.getElementById('pdfPatientName').textContent = activePatientData.name + ` (${activePatientData.condition || 'Rehabilitation'})`;
+    document.getElementById('pdfClinicianName').textContent = isDoc ? r.doctor_name : r.physio_name;
+    document.getElementById('pdfScore').textContent = isDoc ? (r.clinical_score || 'A') : (r.functional_mobility_grade || 'Grade 4/5');
+    document.getElementById('pdfStage').textContent = isDoc ? (r.recovery_stage || 'Phase 2') : (`Discharge: ${r.discharge_readiness || 'On Track'}`);
+    document.getElementById('pdfReportHeading').textContent = isDoc ? 'Physician Clinical Evaluation Report' : 'Physical Therapy Rehabilitation Assessment';
+    document.getElementById('pdfSignature').textContent = isDoc ? (r.doctor_signature || 'Dr. Attending (MD)') : (r.physio_signature || 'Licensed Physical Therapist');
+
+    let bodyHtml = '';
+    if (isDoc) {
+      bodyHtml = `
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <strong class="text-slate-800">Clinical Diagnosis &amp; Procedure:</strong>
+          <p class="mt-1">${escapeReportText(r.diagnosis)}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <strong class="text-slate-800">Range of Motion:</strong>
+            <p class="mt-1">${escapeReportText(r.rom_flexion_extension)}</p>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <strong class="text-slate-800">Pain Assessment:</strong>
+            <p class="mt-1">${escapeReportText(r.pain_evaluation)}</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <strong class="text-slate-800">Doctor Recommendations &amp; Restrictions:</strong>
+          <p class="mt-1">${escapeReportText(r.recommendations)}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <strong class="text-slate-800">Continued Treatment Plan:</strong>
+          <p class="mt-1">${escapeReportText(r.treatment_plan)}</p>
+        </div>
+      `;
+    } else {
+      bodyHtml = `
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <strong class="text-slate-800">Target ROM Achieved:</strong>
+            <p class="mt-1">${escapeReportText(r.target_rom_achieved)}</p>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <strong class="text-slate-800">Adherence &amp; Rep Compliance:</strong>
+            <p class="mt-1">${escapeReportText(r.adherence_score)}</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <strong class="text-slate-800">Movement Quality &amp; Compensations:</strong>
+          <p class="mt-1">${escapeReportText(r.posture_quality)}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <strong class="text-slate-800">Home Exercise Program (HEP) Prescriptions:</strong>
+          <p class="mt-1">${escapeReportText(r.exercise_prescription)}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <strong class="text-slate-800">Clinical Precautions:</strong>
+          <p class="mt-1">${escapeReportText(r.precautions)}</p>
+        </div>
+      `;
+    }
+    document.getElementById('pdfReportContent').innerHTML = bodyHtml;
+
+    document.getElementById('reportModal').classList.remove('hidden');
+    document.getElementById('reportModal').classList.add('flex');
+  } catch(e) {
+    alert('Error viewing report: ' + e.message);
+  }
+}
+
+async function downloadReportPdf() {
+  if (!currentViewReport || !activePatientData) return alert('Open a report first.');
+  try {
+    const blob = await api.downloadClinicalReport(activePatientData.id, currentViewReport.id);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PhysioFlex_Report_${currentViewReport.id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  } catch (e) {
+    alert('Could not download PDF: ' + e.message);
+  }
+}
+
+/* ==================== FEATURE 4: Exercise Demo Video Modal ==================== */
+function openExerciseDemo(exId, exName, bodyPart, planId) {
+  const ex = exerciseCatalogMap[exId] || {};
+  document.getElementById('demoTitle').textContent = ex.name || exName;
+  document.getElementById('demoBodyPart').textContent = ex.body_part || bodyPart || 'Rehabilitation';
+  const videoUrl = (ex.video_url || '').trim();
+  let videoId = (() => {
+    if (!videoUrl) return '';
+    try {
+      const u = new URL(videoUrl, window.location.origin);
+      if (u.hostname.includes('youtu.be')) return u.pathname.split('/').filter(Boolean)[0] || '';
+      if (u.hostname.includes('youtube.com') || u.hostname.includes('youtube-nocookie.com')) {
+        if (u.pathname === '/watch') return u.searchParams.get('v') || '';
+        const parts = u.pathname.split('/').filter(Boolean);
+        if (['embed','shorts','live'].includes(parts[0])) return parts[1] || '';
+      }
+    } catch (_) {}
+    return '';
+  })();
+  // Known public demonstration for Straight Lying-Leg Raises. The previous
+  // seeded ID was unavailable, so override it for this exercise.
+  if (String(exId) === 'e3' || /straight lying.?leg raises/i.test(ex.name || exName || '')) {
+    videoId = '68uVN8s-Js0';
+  }
+  const embed = document.getElementById('demoVideoFrame');
+  const fallback = document.getElementById('demoVideoFallback');
+  fallback.href = `https://www.youtube.com/results?search_query=${encodeURIComponent((ex.name || exName || 'physiotherapy exercise') + ' exercise demonstration')}`;
+  embed.title = `${ex.name || exName || 'Physiotherapy'} exercise demonstration`;
+  embed.referrerPolicy = 'strict-origin-when-cross-origin';
+  // A saved YouTube ID may be deleted, private, or block embedding. Always keep a
+  // working search fallback visible rather than implying every stored video is live.
+  embed.src = videoId ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&playsinline=1` : '';
+
+  const steps = ex.demo_steps || [
+    'Position yourself upright with comfortable support.',
+    'Execute movement smoothly through the prescribed range of motion.',
+    'Breathe steadily; exhale through the exertion phase.',
+    'Lower under steady eccentric control.'
+  ];
+  document.getElementById('demoStepsList').innerHTML = steps.map(s => `<li>${s}</li>`).join('');
+
+  document.getElementById('demoStartBtn').href = `/patient/exercise?exercise=${encodeURIComponent(ex.name || exName)}&reps=${ex.default_reps || 12}&rom=${ex.default_target_rom || 120}&plan=${planId || 'plan001'}&eid=${exId}`;
+
+  document.getElementById('demoVideoModal').classList.remove('hidden');
+  document.getElementById('demoVideoModal').classList.add('flex');
+}
+
+/* ==================== FEATURE 5: Live Video Call Consultation ==================== */
+async function startVideoCall(targetRole, roomId = null) {
+  if (!requireApprovedAction()) return;
+  const room = roomId || ('physioflex-' + (activePatientData?.id || 'consult') + '-' + Date.now().toString(36));
+  const targetName = targetRole === 'doctor' ? 'Doctor' : 'Physiotherapist';
+  try {
+    await api.sendCallSignal({
+      target_role: targetRole,
+      target_patient_id: activePatientData ? activePatientData.id : null,
+      room_id: room,
+      action: 'initiate',
+      caller_name: user?.name || 'Patient',
+      caller_role: 'patient'
+    });
+  } catch (e) {
+    console.error('Call notification failed:', e);
+    alert('Could not notify the ' + targetName + '. Check your internet connection and sign in again. Details: ' + e.message);
+    return;
+  }
+  openPhysioFlexCall(room, 'Consultation with ' + targetName);
+}
+
+function toggleCallMic() {
+  if (!callStream) return;
+  const audioTrack = callStream.getAudioTracks()[0];
+  if (audioTrack) {
+    audioTrack.enabled = !audioTrack.enabled;
+    document.getElementById('btnToggleMic').textContent = audioTrack.enabled ? '🎙️' : '🔇';
+  }
+}
+
+function toggleCallCam() {
+  if (!callStream) return;
+  const videoTrack = callStream.getVideoTracks()[0];
+  if (videoTrack) {
+    videoTrack.enabled = !videoTrack.enabled;
+    document.getElementById('btnToggleCam').textContent = videoTrack.enabled ? '📹' : '🚫';
+  }
+}
+
+function endVideoCall() {
+  if (callStream) {
+    callStream.getTracks().forEach(t => t.stop());
+    callStream = null;
+  }
+  if (callTimerInterval) clearInterval(callTimerInterval);
+  document.getElementById('videoCallModal').classList.add('hidden');
+  document.getElementById('videoCallModal').classList.remove('flex');
+}
+
+/* ==================== FEATURE 6: Privacy Controls & Consent ==================== */
+async function openConsentModal() {
+  if (!activePatientData) return;
+  try {
+    const c = await api.getConsent(activePatientData.id);
+    document.getElementById('csTelemetry').checked = c.telemetry_sharing !== false;
+    document.getElementById('csAids').checked = c.automated_decision_support !== false;
+    document.getElementById('csVideo').checked = c.video_consultation !== false;
+  } catch(e) {}
+  document.getElementById('consentModal').classList.remove('hidden');
+  document.getElementById('consentModal').classList.add('flex');
+}
+
+async function saveConsent() {
+  if (!activePatientData) return;
+  try {
+    await api.updateConsent(activePatientData.id, {
+      telemetry_sharing: document.getElementById('csTelemetry').checked,
+      automated_decision_support: document.getElementById('csAids').checked,
+      video_consultation: document.getElementById('csVideo').checked,
+    });
+    alert('Privacy & consent preferences updated and recorded to clinical audit trail.');
+    closeModals();
+  } catch(e) {
+    alert('Failed to update consent: ' + e.message);
+  }
+}
+
+/* ==================== Standard Modals & Messaging ==================== */
+async function submitAlert() {
+  const message = document.getElementById('aMsg').value.trim();
+  if (!message) return alert('Message required');
+  await api.createPatientAlert({ alert_type: document.getElementById('aType').value, severity: document.getElementById('aSev').value, message });
+  alert('Alert sent to your attending care team');
+  closeModals();
+}
+async function submitBooking() {
+  const preferred_datetime = document.getElementById('bDt').value;
+  if (!preferred_datetime) return alert('Pick a date/time');
+  await api.createBooking({
+    with_role: document.getElementById('bRole').value,
+    preferred_datetime,
+    reason: document.getElementById('bReason').value,
+    notes: document.getElementById('bNotes').value,
+  });
+  alert('Live session appointment requested');
+  closeModals();
+}
+
+let mediaRecorder = null, chunks = [], audioB64 = null;
+async function toggleRec() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    document.getElementById('btnRec').textContent = '● Record';
+    document.getElementById('recStatus').textContent = 'Processing audio…';
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    chunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const buf = await blob.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      audioB64 = btoa(binary);
+      document.getElementById('recStatus').textContent = 'Recorded (' + Math.round(blob.size/1024) + ' KB)';
+    };
+    mediaRecorder.start();
+    document.getElementById('btnRec').textContent = '■ Stop';
+    document.getElementById('recStatus').textContent = 'Recording… Speak now';
+  } catch (e) {
+    alert('Microphone error: ' + e.message);
+  }
+}
+async function submitVoice() {
+  const transcript = document.getElementById('vTranscript').value.trim();
+  if (!transcript && !audioB64) return alert('Record or type a message');
+  try {
+    await api.createVoiceMessage({
+      to_role: document.getElementById('vRole').value,
+      transcript: transcript || '(voice note)',
+      audio_base64: audioB64 || null,
+      duration_seconds: 0,
+    });
+    alert('Message sent to your care team');
+    audioB64 = null;
+    document.getElementById('vTranscript').value = '';
+    document.getElementById('recStatus').textContent = 'Idle';
+    closeModals();
+  } catch (e) {
+    alert('Send failed: ' + e.message + '\n\nTip: type a text message if recording fails.');
+  }
+}
+async function submitComplaint() {
+  const subject = document.getElementById('cSubject').value.trim();
+  const description = document.getElementById('cDesc').value.trim();
+  if (!subject || !description) return alert('Subject and Description required');
+  await api.createComplaint({
+    against_role: document.getElementById('cAgainstRole').value,
+    against_name: document.getElementById('cAgainstName').value,
+    category: document.getElementById('cCategory').value,
+    subject, description, severity: 'medium',
+  });
+  alert('Confidential report submitted to clinic administration');
+  closeModals();
+}
+
+async function playVoice(msgId) {
+  try {
+    const data = await api.getVoiceAudio(msgId);
+    const bin = atob(data.audio_base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: data.mime || 'audio/webm' });
+    new Audio(URL.createObjectURL(blob)).play();
+  } catch (e) {
+    alert('Cannot play voice: ' + e.message);
+  }
+}
+
+async function load() {
+  let me;
+  try {
+    me = await api.me();
+    localStorage.setItem('user', JSON.stringify(me));
+  } catch (e) {
+    return;
+  }
+  if (me.approval_status === 'rejected') {
+    alert('Your registration was declined. Please contact the clinic administrator.');
+    logout();
+    return;
+  }
+
+  const pending = me.approval_status === 'pending';
+  document.getElementById('pendingBanner').classList.toggle('hidden', !pending);
+  document.getElementById('clinicianActions').classList.toggle('hidden', pending);
+
+  // Exercise catalog
+  try {
+    const allEx = await api.request('/api/exercises');
+    (allEx || []).forEach(ex => exerciseCatalogMap[ex.id] = ex);
+  } catch(e) {}
+
+  const data = await api.patientDashboard();
+  const p = data.patient;
+  activePatientData = p;
+  const tips = data.health_tips || [];
+
+  document.getElementById('tipsList').innerHTML = tips.map(t => `
+    <div class="p-3.5 rounded-2xl bg-white border border-healing-100 shadow-sm hover:border-healing-300 transition">
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-healing-100 text-healing-800">
+          ${t.category || 'Clinical Tip'}
+        </span>
+      </div>
+      <div class="font-bold text-slate-900 text-sm">${t.title}</div>
+      <p class="text-xs text-slate-600 mt-1 leading-relaxed">${t.body}</p>
+    </div>
+  `).join('') || '<p class="text-slate-400 text-xs">No tips available currently.</p>';
+
+  if (!p) return;
+  document.getElementById('statPain').textContent = (p.current_pain ?? '–') + '/10';
+  document.getElementById('statRom').textContent = (p.current_rom ?? '–') + '°';
+  document.getElementById('statAdherence').textContent = (p.adherence_percent ?? '–') + '%';
+
+  // Render Charts
+  renderProgressCharts(data.recent_sessions || [], p);
+
+  // Load Reports
+  loadReports();
+
+  // Assigned exercises with DEMO VIDEO buttons
+  const plans = data.active_plans || [];
+  const list = document.getElementById('exerciseSelectList');
+  const heading = document.getElementById('exerciseHeading');
+  const exercises = [];
+  if (pending) {
+    heading.textContent = 'Exercise library (view-only until approved)';
+    (data.exercises || []).forEach(e => exercises.push({
+      ...e,
+      exercise_id: e.id,
+      sets: e.default_sets,
+      reps: e.default_reps,
+      target_rom: e.default_target_rom,
+      plan_title: e.body_part || 'General Mobility',
+      frequency: 'Reference',
+    }));
+  } else {
+    heading.setAttribute('data-i18n', 'assigned_ex');
+    plans.forEach(pl => (pl.exercises || []).forEach(e => exercises.push({ ...e, plan_id: pl.id, plan_title: pl.title })));
+  }
+
+  if (!exercises.length) {
+    list.innerHTML = '';
+    document.getElementById('noPlan').classList.remove('hidden');
+  } else {
+    document.getElementById('noPlan').classList.add('hidden');
+    const startL = window._startLabel || 'Start Exercise 🏃';
+    list.innerHTML = exercises.map(e => `
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-teal-100 hover:border-teal-300 hover:shadow-md transition">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-900 text-sm sm:text-base">${e.name}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+              ${e.plan_title || 'Rehab'}
+            </span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-slate-500 font-medium">
+            <span>🎯 ${e.sets || 3} sets × ${e.reps || 10} reps</span>
+            <span>📐 Target ${e.target_rom || 90}°</span>
+            <span class="text-healing-600 font-semibold">${e.frequency || 'Daily'}</span>
+          </div>
+          <div class="text-xs text-slate-400 line-clamp-1">${e.description || ''}</div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="openExerciseDemo('${e.exercise_id || e.id}','${e.name}','${e.plan_title}','${e.plan_id}')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
+            <span>📺</span> Demo
+          </button>
+          ${pending
+            ? '<span class="text-xs font-bold text-care-800 bg-care-100 border border-care-200 px-3 py-2 rounded-xl">Locked</span>'
+            : `<a class="px-4 py-2 bg-gradient-to-r from-teal-500 to-clinical-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-teal-500/20 hover:from-teal-600 hover:to-clinical-700 transition"
+               href="/patient/exercise?exercise=${encodeURIComponent(e.name)}&reps=${e.reps||10}&rom=${e.target_rom||90}&plan=${e.plan_id}&eid=${e.exercise_id}">
+              ${startL}
+            </a>`}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Messages inbox
+  try {
+    const msgs = await api.getVoiceMessages();
+    const inbox = document.getElementById('inboxList');
+    if (inbox) {
+      inbox.innerHTML = msgs.length ? msgs.map(m => `
+        <div class="rounded-2xl p-3 border ${m.from_role==='patient'?'bg-rehab-50/50 border-rehab-200':'bg-teal-50/60 border-teal-200'}">
+          <div class="flex justify-between items-center text-xs font-semibold mb-1">
+            <span class="inline-flex items-center gap-1 ${m.from_role==='doctor'?'text-clinical-700':m.from_role==='physiotherapist'?'text-healing-700':'text-rehab-700'}">
+              <span>${m.from_role==='doctor'?'👨‍⚕️ Doctor':m.from_role==='physiotherapist'?'👩‍⚕️ PT':'👤 Patient'}</span>
+              <span>→ ${m.to_role}</span>
+            </span>
+            <span class="text-slate-400 text-[10px]">${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+          </div>
+          <div class="text-xs text-slate-700 leading-relaxed">${m.transcript || '(voice note)'}</div>
+          ${m.has_audio ? '<button onclick="playVoice(\''+m.id+'\')" class="mt-1 text-xs font-bold text-teal-600 hover:text-teal-800 flex items-center gap-1">▶ Listen to voice note</button>' : ''}
+        </div>
+      `).join('') : '<p class="text-slate-400 text-xs">No clinician messages yet.</p>';
+    }
+  } catch(e) {}
+
+  // Recent Sessions
+  document.getElementById('sessionList').innerHTML = (data.recent_sessions || []).slice(0, 8).map(s => `
+    <div class="flex items-center justify-between py-2.5">
+      <div>
+        <div class="font-bold text-slate-900 text-xs sm:text-sm">${s.exercise_name}</div>
+        <div class="text-[11px] text-slate-500">${s.date} · <span class="text-healing-600 font-semibold">${s.quality} form</span></div>
+      </div>
+      <div class="text-right">
+        <div class="font-extrabold text-teal-700 text-xs sm:text-sm">${s.reps_completed}/${s.target_reps} reps</div>
+        <div class="text-[11px] text-slate-500">Max ${s.max_rom}°</div>
+      </div>
+    </div>
+  `).join('') || '<p class="text-slate-400 text-xs py-2">No exercise sessions logged yet.</p>';
+
+  // Schedules & Evaluation
+  try {
+    const [schedules, evaluation] = await Promise.all([
+      api.getSchedules(),
+      api.getEvaluation(p.id),
+    ]);
+    document.getElementById('scheduleList').innerHTML = schedules.length ? schedules.slice(0, 8).map(s => `
+      <div class="border-l-4 border-clinical-500 pl-3 py-1.5 bg-clinical-50/30 rounded-r-xl">
+        <div class="font-bold text-slate-900 text-xs sm:text-sm">${s.title}</div>
+        <div class="text-[11px] text-clinical-700 font-medium">${s.schedule_type} · ${s.datetime} · by ${s.created_by_role}</div>
+        ${s.notes ? `<div class="text-xs text-slate-600 mt-0.5">${s.notes}</div>` : ''}
+      </div>
+    `).join('') : '<p class="text-slate-400 text-xs">No upcoming hospital visits scheduled.</p>';
+
+    document.getElementById('statEval').textContent = evaluation.score || 'A';
+    document.getElementById('evalBox').innerHTML = `
+      <div class="font-bold text-slate-900 text-sm mb-2 flex items-center gap-2">
+        <span>Clinical Status:</span>
+        <span class="text-teal-700 font-extrabold">${evaluation.evaluation}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div class="p-2 rounded-xl bg-white border border-slate-100"><strong>ROM Gain:</strong> +${evaluation.rom_improvement}°</div>
+        <div class="p-2 rounded-xl bg-white border border-slate-100"><strong>Pain Trend:</strong> ${evaluation.pain_trend}</div>
+        <div class="p-2 rounded-xl bg-white border border-slate-100"><strong>Sessions:</strong> ${evaluation.session_count}</div>
+        <div class="p-2 rounded-xl bg-white border border-slate-100"><strong>Quality:</strong> ${(evaluation.good_quality_ratio*100).toFixed(0)}% optimal</div>
+      </div>
+      <div class="text-xs font-bold text-slate-700 mb-1">Doctor Recommendations:</div>
+      <ul class="list-disc pl-4 text-xs text-slate-600 space-y-1">${(evaluation.recommendations||[]).map(r => `<li>${r}</li>`).join('')}</ul>
+    `;
+  } catch (e) {
+    console.warn(e);
+  }
+
+  try {
+    const msgs = await api.getVoiceMessages();
+    document.getElementById('myMsgList').innerHTML = msgs.length
+      ? msgs.slice(0, 8).map(m => `
+        <div class="border-l-4 border-rehab-400 pl-2.5 py-1 text-xs">
+          <div class="text-[11px] text-slate-400 font-semibold">${m.from_role} → ${m.to_role}</div>
+          <div class="text-slate-700 mt-0.5">${m.transcript || '(voice note)'}</div>
+        </div>
+      `).join('')
+      : '<span class="text-slate-400 text-xs">No voice messages sent yet.</span>';
+  } catch(e) {}
+}
+
+setLang(savedLang);
+</script>
+
+<link rel="stylesheet" href="/static/chat-widget.css">
+<script src="/static/chat-widget.js" defer></script>
+<script>
+// Cross-device PWA video room. Jitsi provides the media transport; the backend
+// call-signal endpoint is used only to notify the other portal.
+let physioFlexCallOverlay = null;
+function openPhysioFlexCall(roomId, title = 'PhysioFlex video consultation') {
+  if (!roomId) { alert('This call has no room ID. Please start the call again.'); return; }
+  closePhysioFlexCall();
+  const safeRoom = String(roomId).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 120);
+  const overlay = document.createElement('div');
+  overlay.id = 'physioFlexCallOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#07111f;color:white;display:flex;flex-direction:column;padding:10px;box-sizing:border-box';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 4px;font:600 14px system-ui';
+  const label = document.createElement('span');
+  label.textContent = title + ' · ' + safeRoom;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.textContent = 'End / Close';
+  close.style.cssText = 'border:0;border-radius:10px;padding:10px 14px;background:#dc2626;color:#fff;font-weight:700';
+  close.onclick = closePhysioFlexCall;
+  bar.append(label, close);
+  const frameHost = document.createElement('div');
+  frameHost.id = 'physioFlexJitsiHost';
+  frameHost.style.cssText = 'flex:1;width:100%;min-height:0;border-radius:12px;overflow:hidden;background:#111827';
+  overlay.append(bar, frameHost);
+  document.body.appendChild(overlay);
+  physioFlexCallOverlay = overlay;
+  const join = () => {
+    if (!window.JitsiMeetExternalAPI || !document.getElementById('physioFlexJitsiHost')) {
+      frameHost.innerHTML = '<div style="padding:24px;font:16px system-ui">Unable to load video service. Check your internet connection, then close and retry.</div>';
+      return;
+    }
+    const api = new window.JitsiMeetExternalAPI('meet.jit.si', {
+      roomName: 'PhysioFlex-' + safeRoom,
+      parentNode: frameHost,
+      width: '100%',
+      height: '100%',
+      configOverwrite: { prejoinPageEnabled: false, startWithAudioMuted: false, startWithVideoMuted: false },
+      interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen', 'hangup', 'chat', 'raisehand', 'tileview'] },
+      userInfo: { displayName: (JSON.parse(localStorage.getItem('user') || '{}').name || 'PhysioFlex user') }
+    });
+    api.addEventListener('readyToClose', closePhysioFlexCall);
+  };
+  if (window.JitsiMeetExternalAPI) {
+    join();
+  } else {
+    let script = document.getElementById('physioflex-jitsi-api');
+    if (!script) {
+      script = document.createElement('script');
+      script.id = 'physioflex-jitsi-api';
+      script.src = 'https://meet.jit.si/external_api.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener('load', join, { once: true });
+    script.addEventListener('error', () => {
+      frameHost.innerHTML = '<div style="padding:24px;font:16px system-ui">Video service failed to load. Check your internet connection and try again.</div>';
+    }, { once: true });
+  }
+}
+function closePhysioFlexCall() {
+  const overlay = document.getElementById('physioFlexCallOverlay');
+  if (overlay) overlay.remove();
+  physioFlexCallOverlay = null;
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Sign In – PhysioFlex Hospital Portal{% endblock %}
+{% block body %}
+<div class="min-h-screen grid md:grid-cols-2 bg-slate-50">
+  <!-- Left Column: Inspiring Clinical Medical Visual -->
+  <div class="hidden md:flex flex-col justify-between relative p-12 overflow-hidden bg-gradient-to-br from-teal-800 via-clinical-800 to-slate-900 text-white">
+    <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1000&q=80" alt="Doctor and Patient" class="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30" />
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-teal-950/60 to-clinical-950/30"></div>
+
+    <div class="relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-teal-200 mb-6">
+        <span>✚</span> St. Jude Physical Rehabilitation & Hospital Network
+      </div>
+      <h2 class="font-display text-4xl font-extrabold text-white leading-tight">
+        Restoring movement,<br>one gentle rep at a time.
+      </h2>
+      <p class="text-teal-100 text-sm mt-3 max-w-sm leading-relaxed">
+        Connect directly with your attending physician and certified physiotherapist. Monitor your range of motion and recovery progress.
+      </p>
+    </div>
+
+    <div class="relative z-10 pt-10 border-t border-white/10 space-y-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-300 text-lg">
+          🛡️
+        </div>
+        <div>
+          <div class="text-sm font-bold text-white">Clinical Data Protection</div>
+          <div class="text-xs text-teal-200">Patient confidentiality & hospital-grade security standards</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Sign In Form -->
+  <div class="flex items-center justify-center px-6 py-12 sm:px-12 bg-white">
+    <div class="w-full max-w-md">
+      <a href="/" class="inline-flex items-center gap-3 mb-8 group">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-500 via-clinical-600 to-teal-700 flex items-center justify-center text-white font-display font-extrabold text-xl shadow-md shadow-teal-500/25 med-pulse">
+          ✚
+        </div>
+        <div>
+          <span class="font-display font-bold text-2xl tracking-tight text-slate-900 flex items-center gap-1">
+            Physio<span class="text-teal-600">Flex</span>
+          </span>
+          <span class="text-[10px] tracking-wider uppercase text-teal-700 font-bold block -mt-1">Hospital Portal</span>
+        </div>
+      </a>
+
+      <h1 class="font-display text-3xl font-extrabold text-slate-900" data-i18n="Welcome Back">Welcome Back</h1>
+      <p class="mt-2 text-sm text-slate-500" data-i18n="Sign in to access your rehabilitation plan, clinical appointments, and telemetry dashboard.">
+        Sign in to access your rehabilitation plan, clinical appointments, and telemetry dashboard.
+      </p>
+
+      <form id="loginForm" class="mt-8 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" data-i18n="Hospital / Account Email">Hospital / Account Email</label>
+          <input type="email" id="email" required class="input" placeholder="you@hospital.com" autocomplete="username" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" data-i18n="Password">Password</label>
+          <input type="password" id="password" required class="input" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <div id="error" class="hidden text-xs text-vital-700 bg-vital-50 border border-vital-200 px-3.5 py-2.5 rounded-xl font-medium"></div>
+        <button type="submit" class="w-full btn-primary py-3.5 text-base font-bold shadow-lg shadow-teal-500/25" data-i18n="Sign In to Portal">
+          Sign In to Portal
+        </button>
+      </form>
+
+      <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <span>Are you a new patient? <a href="/register" class="text-teal-600 font-bold hover:underline">Create an account</a></span>
+        <a href="/chat" class="text-clinical-600 font-semibold hover:underline">💬 Smart Chat</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('error');
+  err.classList.add('hidden');
+  try {
+    const res = await api.login(document.getElementById('email').value, document.getElementById('password').value);
+    localStorage.setItem('token', res.access_token);
+    localStorage.setItem('user', JSON.stringify(res.user));
+    const role = res.user.role;
+    if (role === 'admin') window.location.href = '/admin';
+    else if (role === 'doctor') window.location.href = '/doctor';
+    else if (role === 'physiotherapist') window.location.href = '/physio';
+    else window.location.href = '/patient';
+  } catch (ex) {
+    err.textContent = ex.message || 'Invalid email or password';
+    err.classList.remove('hidden');
+  }
+});
+</script>
+{% endblock %}

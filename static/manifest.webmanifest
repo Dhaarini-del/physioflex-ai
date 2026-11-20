@@ -1,0 +1,25 @@
+{
+  "name": "PhysioFlex \u2013 Digital Physiotherapy",
+  "short_name": "PhysioFlex",
+  "description": "Personalized rehabilitation and recovery tracking",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/static/icons/physioflex-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/physioflex-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

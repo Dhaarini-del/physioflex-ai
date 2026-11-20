@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}AI Movement Analysis – PhysioFlex{% endblock %}
+
+{% block body %}
+<header class="glass sticky top-0 z-40 border-b border-teal-100/80 shadow-xs">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-500 via-clinical-600 to-teal-700 flex items-center justify-center text-white font-extrabold text-lg shadow-sm shadow-teal-500/30 med-pulse">
+        ✚
+      </div>
+      <div>
+        <span class="font-bold text-lg text-slate-900 tracking-tight">Physio<span class="text-teal-600">Flex</span></span>
+        <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 font-semibold border border-teal-200">ML Movement Analysis</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/patient" class="text-xs font-semibold text-slate-600 hover:text-teal-700 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition-colors">Patient Portal</a>
+      <a href="/physio" class="text-xs font-semibold text-slate-600 hover:text-teal-700 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition-colors">Physio Portal</a>
+      <a href="/login" class="text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100 transition-colors">Login</a>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full space-y-6">
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-br from-teal-800 via-clinical-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
+    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 max-w-2xl">
+      <span class="text-xs uppercase tracking-wider font-bold text-teal-300 bg-teal-900/60 px-3 py-1 rounded-full border border-teal-500/30">AI-Powered Kinematics</span>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-3">Wearable Movement ML Evaluation</h1>
+      <p class="text-teal-100 text-sm mt-2 leading-relaxed">
+        Real-time physical therapy exercise assessment trained on the Bilkent Physical Therapy dataset. Evaluates cadence, range of motion, and execution quality across 144 multi-axis IMU features.
+      </p>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+      <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active ML Model</p>
+      <h2 class="text-2xl font-extrabold text-slate-900 mt-1" id="statModel">{{ model_name }}</h2>
+      <p class="text-xs text-teal-600 font-medium mt-1">Multi-tree Ensemble</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+      <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Test Accuracy</p>
+      <h2 class="text-2xl font-extrabold text-teal-600 mt-1" id="statAccuracy">{{ accuracy }}</h2>
+      <p class="text-xs text-slate-500 font-medium mt-1">Holdout test set (1,202 samples)</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+      <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Required Features</p>
+      <h2 class="text-2xl font-extrabold text-clinical-600 mt-1" id="statFeatures">{{ features_count }}</h2>
+      <p class="text-xs text-slate-500 font-medium mt-1">Acc, Gyr, Mag statistical summaries</p>
+    </div>
+  </div>
+
+  <!-- Interactive Analysis Card -->
+  <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Live Exercise Movement Classifier</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Paste sensor feature dictionary or load a pre-recorded test sample.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="loadSampleBtn" type="button" class="px-3.5 py-1.5 rounded-xl border border-teal-200 text-teal-700 bg-teal-50 text-xs font-bold hover:bg-teal-100 transition-colors">
+          ⚡ Load Sample Data
+        </button>
+        <button id="clearBtn" type="button" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label for="featureJson" class="block text-xs font-bold text-slate-700 mb-1.5">Sensor Features Payload (JSON)</label>
+      <textarea id="featureJson" rows="8" spellcheck="false" class="w-full font-mono text-xs p-3.5 border border-slate-200 rounded-2xl focus:outline-hidden focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 bg-slate-50/50" placeholder='{"acc_x_mean": -9.38, "acc_x_std": 0.069, ...}'></textarea>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button id="predictBtn" type="button" class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-clinical-600 text-white font-bold text-sm shadow-sm hover:from-teal-700 hover:to-clinical-700 transition-all cursor-pointer">
+        Analyze Movement Quality
+      </button>
+      <span id="loadingSpinner" class="hidden text-xs text-slate-500 flex items-center gap-1.5">
+        <span class="inline-block w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></span>
+        Evaluating kinematic signals...
+      </span>
+    </div>
+
+    <div id="errorAlert" class="hidden p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs font-medium"></div>
+
+    <!-- Prediction Results Card -->
+    <div id="resultCard" class="hidden p-6 rounded-2xl border transition-all mt-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <span class="text-xs uppercase font-extrabold tracking-wider text-slate-500">Evaluation Result</span>
+          <h3 id="resultLabel" class="text-2xl font-extrabold mt-0.5 capitalize">—</h3>
+        </div>
+        <span id="resultBadge" class="self-start sm:self-auto px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">—</span>
+      </div>
+
+      <p id="resultDesc" class="text-sm text-slate-700 mt-3"></p>
+
+      <div class="mt-4 p-3.5 bg-white/70 rounded-xl border border-slate-100">
+        <span class="text-xs font-bold text-slate-700">Clinical Recommendation:</span>
+        <p id="resultAction" class="text-xs text-slate-600 mt-1"></p>
+      </div>
+
+      <!-- Probability Bars -->
+      <div class="mt-5 space-y-2" id="probContainer">
+        <span class="text-xs font-bold text-slate-600">Model Probability Distribution:</span>
+        <div id="probBars" class="space-y-1.5 pt-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Movement Quality Criteria Reference -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-white border border-green-200/80 rounded-2xl p-5 shadow-xs">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-3 h-3 rounded-full bg-green-500"></span>
+        <h4 class="font-bold text-sm text-green-900">Correct Movement</h4>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Full physiologic range of motion achieved with smooth acceleration profiles and controlled eccentric tempo.
+      </p>
+    </div>
+    <div class="bg-white border border-amber-200/80 rounded-2xl p-5 shadow-xs">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+        <h4 class="font-bold text-sm text-amber-900">Low Amplitude</h4>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Restricted excursion or early reversal prior to reaching targeted joint angles, often caused by pain or stiffness.
+      </p>
+    </div>
+    <div class="bg-white border border-red-200/80 rounded-2xl p-5 shadow-xs">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-3 h-3 rounded-full bg-red-500"></span>
+        <h4 class="font-bold text-sm text-red-900">Too Fast</h4>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Ballistic momentum rather than controlled neuromuscular activation. Increases risk of joint shearing.
+      </p>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const featureJson = document.getElementById("featureJson");
+const predictBtn = document.getElementById("predictBtn");
+const loadSampleBtn = document.getElementById("loadSampleBtn");
+const clearBtn = document.getElementById("clearBtn");
+const errorAlert = document.getElementById("errorAlert");
+const resultCard = document.getElementById("resultCard");
+const resultLabel = document.getElementById("resultLabel");
+const resultBadge = document.getElementById("resultBadge");
+const resultDesc = document.getElementById("resultDesc");
+const resultAction = document.getElementById("resultAction");
+const probBars = document.getElementById("probBars");
+const loadingSpinner = document.getElementById("loadingSpinner");
+
+clearBtn.addEventListener("click", () => {
+  featureJson.value = "";
+  errorAlert.classList.add("hidden");
+  resultCard.classList.add("hidden");
+});
+
+loadSampleBtn.addEventListener("click", async () => {
+  try {
+    const res = await fetch("/api/ml/sample");
+    const data = await res.json();
+    if (data.features) {
+      featureJson.value = JSON.stringify(data.features, null, 2);
+      errorAlert.classList.add("hidden");
+    }
+  } catch (err) {
+    errorAlert.textContent = "Failed to load sample: " + err.message;
+    errorAlert.classList.remove("hidden");
+  }
+});
+
+predictBtn.addEventListener("click", async () => {
+  errorAlert.classList.add("hidden");
+  resultCard.classList.add("hidden");
+
+  let payload;
+  try {
+    const raw = featureJson.value.trim();
+    if (!raw) throw new Error("Please enter or load sensor features.");
+    payload = JSON.parse(raw);
+  } catch (err) {
+    errorAlert.textContent = "Invalid JSON: " + err.message;
+    errorAlert.classList.remove("hidden");
+    return;
+  }
+
+  const features = payload.features || payload;
+  predictBtn.disabled = true;
+  loadingSpinner.classList.remove("hidden");
+
+  try {
+    const res = await fetch("/api/ml/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ features })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.detail || data.message || "Classification failed.");
+    }
+
+    resultLabel.textContent = data.predicted_label;
+    resultDesc.textContent = data.feedback.description;
+    resultAction.textContent = data.feedback.action;
+
+    resultCard.className = "p-6 rounded-2xl border transition-all mt-4";
+    if (data.predicted_class === "correct") {
+      resultCard.classList.add("bg-green-50/70", "border-green-300");
+      resultBadge.className = "self-start sm:self-auto px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-green-600 text-white";
+      resultBadge.textContent = "Optimal Movement";
+    } else if (data.predicted_class === "low_amplitude") {
+      resultCard.classList.add("bg-amber-50/70", "border-amber-300");
+      resultBadge.className = "self-start sm:self-auto px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-600 text-white";
+      resultBadge.textContent = "Low Amplitude Warning";
+    } else {
+      resultCard.classList.add("bg-red-50/70", "border-red-300");
+      resultBadge.className = "self-start sm:self-auto px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-red-600 text-white";
+      resultBadge.textContent = "Cadence Too Fast";
+    }
+
+    // Probability Bars
+    probBars.innerHTML = "";
+    if (data.probabilities && Object.keys(data.probabilities).length > 0) {
+      for (const [cls, prob] of Object.entries(data.probabilities)) {
+        const pct = Math.round(prob * 100);
+        const barDiv = document.createElement("div");
+        barDiv.className = "space-y-1";
+        barDiv.innerHTML = `
+          <div class="flex justify-between text-xs text-slate-600 font-medium">
+            <span class="capitalize">${cls.replace('_', ' ')}</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+            <div class="bg-teal-600 h-2 rounded-full" style="width: ${pct}%"></div>
+          </div>
+        `;
+        probBars.appendChild(barDiv);
+      }
+    }
+
+    resultCard.classList.remove("hidden");
+  } catch (err) {
+    errorAlert.textContent = err.message;
+    errorAlert.classList.remove("hidden");
+  } finally {
+    predictBtn.disabled = false;
+    loadingSpinner.classList.add("hidden");
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+{% block title %}PhysioFlex – Hospital & Clinical Rehabilitation Platform{% endblock %}
+{% block body %}
+<div class="min-h-screen flex flex-col">
+  <!-- Top Hospital Care Banner -->
+  <div class="bg-gradient-to-r from-teal-700 via-clinical-700 to-teal-800 text-white text-xs font-medium py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-[10px]">✚</span>
+    <span>Hospital-Supervised Digital Physiotherapy & Rehabilitation Network</span>
+    <span class="hidden sm:inline opacity-75">· Certified Clinical Care & Real-Time Patient Monitoring</span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="glass sticky top-0 z-30 border-b border-teal-100/70">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-500 via-clinical-600 to-teal-700 flex items-center justify-center text-white font-display font-extrabold text-xl shadow-md shadow-teal-500/20 med-pulse">
+          ✚
+        </div>
+        <div>
+          <span class="font-display font-bold text-xl tracking-tight text-slate-900 flex items-center gap-1.5">
+            Physio<span class="text-teal-600">Flex</span>
+          </span>
+          <span class="text-[10px] tracking-wider uppercase text-teal-700 font-semibold block -mt-1">Hospital & Clinical Care</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <a href="#features" class="hidden md:inline text-sm font-medium text-slate-600 hover:text-teal-700 transition">Clinical Portals</a>
+        <a href="#how" class="hidden md:inline text-sm font-medium text-slate-600 hover:text-teal-700 transition">Care Journey</a>
+        <a href="/chat" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition">
+          <span>💬</span> Smart Chat
+        </a>
+        <a href="/register" class="btn-secondary text-sm hidden sm:inline-flex">New Patient</a>
+        <a href="/login" class="btn-primary text-sm">
+          <span>Sign In</span>
+          <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden pt-8 pb-16 md:pt-16 md:pb-24">
+    <!-- Medical ambient backgrounds -->
+    <div class="absolute inset-0 bg-gradient-to-b from-teal-50/50 via-sky-50/30 to-white pointer-events-none"></div>
+    <div class="absolute -top-24 right-0 w-96 h-96 bg-teal-200/40 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-1/2 left-0 w-80 h-80 bg-cyan-200/30 rounded-full blur-3xl pointer-events-none"></div>
+    
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-12 gap-10 items-center">
+      <div class="md:col-span-7 space-y-6">
+        <!-- Medical Badges -->
+        <div class="flex flex-wrap gap-2">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-100/80 text-teal-800 text-xs font-bold border border-teal-200/70 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-teal-500 animate-ping"></span>
+            ✚ Patient-Centered Clinical Care
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-clinical-100/80 text-clinical-800 text-xs font-bold border border-clinical-200/70 shadow-sm">
+            🩺 Doctor & Physio Supervised
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-healing-100/80 text-healing-800 text-xs font-bold border border-healing-200/70 shadow-sm">
+            🌿 Camera Joint Angle Feedback
+          </span>
+        </div>
+
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.12] tracking-tight">
+          Gentle, guided recovery for <br class="hidden sm:inline">
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 via-clinical-600 to-rehab-600">
+            every step of your healing
+          </span>
+        </h1>
+
+        <p class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+          PhysioFlex bridges doctors, physiotherapists, and recovering patients. 
+          Enjoy reassuring guidance, real-time posture analysis via webcam, and direct 
+          multilingual support throughout your orthopedic and post-surgical journey.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-wrap gap-3 pt-2">
+          <a href="/register" class="btn-primary text-base px-6 py-3.5 shadow-lg shadow-teal-500/25">
+            <span>🌟 Start Patient Recovery</span>
+            <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+          <a href="/login" class="btn-secondary text-base px-6 py-3.5">
+            <span>🩺 Clinician & Patient Portal</span>
+          </a>
+          <a href="/chat" class="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 font-semibold text-base border border-teal-200/80 transition">
+            <span>💬 Ask Medical AI</span>
+          </a>
+        </div>
+
+        <!-- Metric highlights -->
+        <div class="pt-6 border-t border-teal-100/80 grid grid-cols-3 sm:grid-cols-4 gap-4 text-left">
+          <div class="p-2.5 rounded-xl bg-white/70 border border-teal-50 shadow-sm">
+            <div class="font-display text-2xl font-extrabold text-teal-700">3</div>
+            <div class="text-xs font-semibold text-slate-500">Dedicated Portals</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/70 border border-clinical-50 shadow-sm">
+            <div class="font-display text-2xl font-extrabold text-clinical-600">AI</div>
+            <div class="text-xs font-semibold text-slate-500">Pose Angle Sync</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/70 border border-healing-50 shadow-sm">
+            <div class="font-display text-2xl font-extrabold text-healing-600">13+</div>
+            <div class="text-xs font-semibold text-slate-500">Patient Languages</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/70 border border-vital-50 shadow-sm hidden sm:block">
+            <div class="font-display text-2xl font-extrabold text-vital-600">24/7</div>
+            <div class="text-xs font-semibold text-slate-500">Clinical Alerts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Visual Recovery Card Mockup -->
+      <div class="md:col-span-5 relative">
+        <div class="relative mx-auto max-w-md">
+          <!-- Main Hero Image with Medical Frame -->
+          <div class="rounded-3xl overflow-hidden shadow-2xl shadow-teal-900/10 border-4 border-white ring-1 ring-teal-200/60">
+            <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80" alt="Physiotherapy Patient with Clinician" class="w-full h-80 sm:h-96 object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
+            
+            <div class="absolute bottom-4 left-4 right-4 text-white">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/90 text-white text-[11px] font-bold mb-1">
+                ● Live Clinical Session
+              </div>
+              <h3 class="font-display font-bold text-lg">Targeted Knee & Joint Extension</h3>
+              <p class="text-xs text-teal-100">Prescribed by Dr. Marcus Reid & PT Elena Chen</p>
+            </div>
+          </div>
+
+          <!-- Floating Telemetry Card 1 -->
+          <div class="absolute -bottom-8 -left-4 sm:-left-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-4 border border-teal-100/90 max-w-[240px] transform hover:scale-105 transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-teal-700">Live Joint Angle</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-clinical-50 p-2 rounded-xl">
+                <div class="text-base font-extrabold text-clinical-600">124°</div>
+                <div class="text-[10px] text-slate-500 font-medium">Angle</div>
+              </div>
+              <div class="bg-healing-50 p-2 rounded-xl">
+                <div class="text-base font-extrabold text-healing-600">10/12</div>
+                <div class="text-[10px] text-slate-500 font-medium">Reps</div>
+              </div>
+              <div class="bg-care-50 p-2 rounded-xl">
+                <div class="text-base font-extrabold text-care-600">98%</div>
+                <div class="text-[10px] text-slate-500 font-medium">Form</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Doctor Assurance Card 2 -->
+          <div class="absolute -top-4 -right-4 sm:-right-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-3 border border-clinical-100 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center text-teal-700 text-lg">
+              🩺
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Dr. Approved Plan</div>
+              <div class="text-[11px] text-emerald-600 font-semibold">✓ ROM recovering +18°</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 Dedicated Portals -->
+  <section id="features" class="py-20 bg-white/80 border-y border-teal-100/70 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wider mb-3">
+          Hospital Ecosystem
+        </span>
+        <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-slate-900">
+          Connected Portals for Comprehensive Care
+        </h2>
+        <p class="mt-3 text-base text-slate-600">
+          Three collaborative clinical portals provide an unbroken continuum of care 
+          from surgical discharge to full mobility restoration.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Doctor Portal Card (Clinical Blue) -->
+        <div class="card p-7 hover:-translate-y-1 transition duration-200 border-t-4 border-t-clinical-500 relative group">
+          <div class="w-14 h-14 rounded-2xl bg-clinical-50 text-clinical-600 flex items-center justify-center text-2xl mb-5 shadow-sm group-hover:scale-110 transition">
+            🩺
+          </div>
+          <div class="inline-block px-2.5 py-0.5 rounded-full bg-clinical-100 text-clinical-800 text-xs font-bold mb-2">
+            Physicians & Physiatrists
+          </div>
+          <h3 class="font-display font-bold text-xl text-slate-900 mb-2">Doctor Portal</h3>
+          <p class="text-sm text-slate-600 leading-relaxed mb-5">
+            Supervise post-surgical recovery, review objective ROM metrics, record surgery notes, schedule clinical evaluations, and coordinate with physiotherapists.
+          </p>
+          <ul class="space-y-2 text-xs font-medium text-slate-700 mb-6">
+            <li class="flex items-center gap-2"><span class="text-clinical-500 font-bold">✓</span> Surgery notes & diagnosis tracking</li>
+            <li class="flex items-center gap-2"><span class="text-clinical-500 font-bold">✓</span> Real-time patient alerts & pain trends</li>
+            <li class="flex items-center gap-2"><span class="text-clinical-500 font-bold">✓</span> Direct care team message broadcast</li>
+          </ul>
+          <a href="/login" class="inline-flex items-center text-sm font-bold text-clinical-600 hover:text-clinical-800">
+            Open Doctor Portal →
+          </a>
+        </div>
+
+        <!-- Physiotherapist Portal Card (Healing Emerald) -->
+        <div class="card p-7 hover:-translate-y-1 transition duration-200 border-t-4 border-t-healing-500 relative group">
+          <div class="w-14 h-14 rounded-2xl bg-healing-50 text-healing-600 flex items-center justify-center text-2xl mb-5 shadow-sm group-hover:scale-110 transition">
+            🌿
+          </div>
+          <div class="inline-block px-2.5 py-0.5 rounded-full bg-healing-100 text-healing-800 text-xs font-bold mb-2">
+            Physical Therapists
+          </div>
+          <h3 class="font-display font-bold text-xl text-slate-900 mb-2">Physiotherapist Portal</h3>
+          <p class="text-sm text-slate-600 leading-relaxed mb-5">
+            Prescribe targeted exercise regimens from our medical dataset, set ROM angle targets, monitor adherence in real-time, and host live video check-ins.
+          </p>
+          <ul class="space-y-2 text-xs font-medium text-slate-700 mb-6">
+            <li class="flex items-center gap-2"><span class="text-healing-600 font-bold">✓</span> Tailored rehab plan builder with ROM targets</li>
+            <li class="flex items-center gap-2"><span class="text-healing-600 font-bold">✓</span> Joint adherence & quality scoring</li>
+            <li class="flex items-center gap-2"><span class="text-healing-600 font-bold">✓</span> Doctor suggestion synchronization</li>
+          </ul>
+          <a href="/login" class="inline-flex items-center text-sm font-bold text-healing-600 hover:text-healing-800">
+            Open Physio Portal →
+          </a>
+        </div>
+
+        <!-- Patient Portal Card (Caring Teal / Purple) -->
+        <div class="card p-7 hover:-translate-y-1 transition duration-200 border-t-4 border-t-teal-500 relative group">
+          <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-2xl mb-5 shadow-sm group-hover:scale-110 transition">
+            🏃
+          </div>
+          <div class="inline-block px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 text-xs font-bold mb-2">
+            Patients & Families
+          </div>
+          <h3 class="font-display font-bold text-xl text-slate-900 mb-2">Patient Portal</h3>
+          <p class="text-sm text-slate-600 leading-relaxed mb-5">
+            Follow customized daily workouts with real-time pose guidance, log pain levels, message clinicians, record voice notes, and receive tips in your native language.
+          </p>
+          <ul class="space-y-2 text-xs font-medium text-slate-700 mb-6">
+            <li class="flex items-center gap-2"><span class="text-teal-600 font-bold">✓</span> Live camera feedback & rep counting</li>
+            <li class="flex items-center gap-2"><span class="text-teal-600 font-bold">✓</span> One-click clinician alert & booking</li>
+            <li class="flex items-center gap-2"><span class="text-teal-600 font-bold">✓</span> 13 regional languages supported</li>
+          </ul>
+          <a href="/register" class="inline-flex items-center text-sm font-bold text-teal-600 hover:text-teal-800">
+            Create Patient Account →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Care Journey Steps -->
+  <section id="how" class="py-20 bg-gradient-to-b from-white to-teal-50/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-clinical-100 text-clinical-800 text-xs font-bold uppercase tracking-wider mb-3">
+          Clinical Workflow
+        </span>
+        <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-slate-900">
+          How Your Recovery Journey Unfolds
+        </h2>
+        <p class="mt-3 text-base text-slate-600">
+          From hospital admission to thriving at home — here is how our clinical supervision works.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Step 1 -->
+        <div class="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm relative">
+          <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 font-display font-extrabold flex items-center justify-center text-lg mb-4">
+            1
+          </div>
+          <h4 class="font-display font-bold text-base text-slate-900 mb-1">Clinical Assessment</h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Your physician records operation details, baseline range of motion, and diagnosis in the hospital system.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm relative">
+          <div class="w-10 h-10 rounded-xl bg-clinical-100 text-clinical-800 font-display font-extrabold flex items-center justify-center text-lg mb-4">
+            2
+          </div>
+          <h4 class="font-display font-bold text-base text-slate-900 mb-1">Prescribed Plan</h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Your dedicated physiotherapist creates a personalized exercise program with target sets, reps, and degree milestones.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm relative">
+          <div class="w-10 h-10 rounded-xl bg-healing-100 text-healing-800 font-display font-extrabold flex items-center justify-center text-lg mb-4">
+            3
+          </div>
+          <h4 class="font-display font-bold text-base text-slate-900 mb-1">Camera-Guided Training</h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Train at home using your computer or mobile camera. Live AI monitors joint angles and provides friendly posture tips.
+          </p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm relative">
+          <div class="w-10 h-10 rounded-xl bg-rehab-100 text-rehab-800 font-display font-extrabold flex items-center justify-center text-lg mb-4">
+            4
+          </div>
+          <h4 class="font-display font-bold text-base text-slate-900 mb-1">Supervised Milestones</h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Your clinicians review progress graphs, adjust routines as pain diminishes, and celebrate your full mobility recovery.
+          </p>
+        </div>
+      </div>
+
+      <!-- Clinical Safety Notice Banner -->
+      <div class="mt-12 p-6 rounded-2xl bg-gradient-to-r from-teal-50 via-clinical-50 to-emerald-50 border border-teal-200/80 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-white text-teal-700 flex items-center justify-center text-2xl shadow-sm shrink-0">
+            🏥
+          </div>
+          <div>
+            <h4 class="font-display font-bold text-slate-900 text-base">Hospital Safety & Clinical Decision Support</h4>
+            <p class="text-xs text-slate-600 mt-0.5">
+              PhysioFlex provides assistive analytics and clinician supervision, not autonomous diagnosis. Always follow your physician's counsel.
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-3 shrink-0">
+          <a href="/register" class="btn-primary text-sm">Join Patient Network</a>
+          <a href="/chat" class="btn-secondary text-sm">Ask Smart Chat</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hospital Footer -->
+  <footer class="mt-auto border-t border-teal-100 bg-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-600 to-clinical-600 flex items-center justify-center text-white font-bold">
+          ✚
+        </div>
+        <div>
+          <span class="font-display font-bold text-base text-slate-900">PhysioFlex Medical</span>
+          <span class="text-xs text-slate-500 block">Hospital & Digital Rehabilitation Network</span>
+        </div>
+      </div>
+      
+      <div class="text-xs text-slate-500 text-center md:text-right space-y-1">
+        <p>In case of acute medical emergencies, call your local hospital or emergency services immediately (911 / 112).</p>
+        <p>© 2026 PhysioFlex Healthcare Systems · Patient Privacy & Clinical Protocol Compliant</p>
+      </div>
+    </div>
+  </footer>
+</div>
+{% endblock %}

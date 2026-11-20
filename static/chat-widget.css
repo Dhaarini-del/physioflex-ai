@@ -1,0 +1,193 @@
+#physio-chat-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 99999;
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(13, 148, 136, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#physio-chat-launcher:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 12px 32px rgba(13, 148, 136, 0.5);
+}
+
+#physio-chat-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 100px;
+  z-index: 99999;
+  width: 380px;
+  height: 520px;
+  max-height: calc(100dvh - 125px);
+  background: white;
+  border: 1.5px solid #ccfbf1;
+  border-radius: 24px;
+  box-shadow: 0 16px 45px rgba(13, 148, 136, 0.15), 0 0 1px 1px rgba(13, 148, 136, 0.1);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: "Plus Jakarta Sans", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#physio-chat-panel.open {
+  display: flex;
+  animation: physioSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes physioSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.physio-chat-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(13, 148, 136, 0.2);
+}
+
+.physio-chat-header strong {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.physio-chat-header button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 0;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.physio-chat-header button:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+#physio-chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: radial-gradient(circle at 10% 20%, rgba(204, 251, 241, 0.3) 0%, rgba(240, 253, 250, 0.1) 40%, #ffffff 100%);
+}
+
+.physio-chat-bubble {
+  max-width: 86%;
+  padding: 12px 15px;
+  border-radius: 18px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.physio-chat-bubble.bot {
+  background: white;
+  border: 1px solid #ccfbf1;
+  border-top-left-radius: 4px;
+  color: #1e293b;
+  align-self: flex-start;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.physio-chat-bubble.user {
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+  color: white;
+  border-top-right-radius: 4px;
+  align-self: flex-end;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.physio-chat-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #e2e8f0;
+  background: white;
+}
+
+#physio-chat-input {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+#physio-chat-input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+#physio-chat-send {
+  border: 0;
+  border-radius: 12px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
+  transition: all 0.2s ease;
+}
+
+#physio-chat-send:hover {
+  background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+  transform: translateY(-1px);
+}
+
+#physio-chat-send:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 480px) {
+  #physio-chat-launcher {
+    right: 16px;
+    bottom: 16px;
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+
+  #physio-chat-panel {
+    right: 10px;
+    bottom: 84px;
+    width: calc(100vw - 20px);
+    height: min(500px, calc(100dvh - 100px));
+    max-height: calc(100dvh - 100px);
+  }
+}

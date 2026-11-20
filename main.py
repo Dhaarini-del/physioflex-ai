@@ -2184,7 +2184,8 @@ async def smart_chat_message(body: SmartChatRequest, user: TokenData = Depends(g
         (c for c in db.get("consent_settings", []) if patient and str(c.get("patient_id")) == str(patient.get("id"))),
         None,
     )
-    ai_context_allowed = bool(consent_record and consent_record.get("automated_decision_support") is True)
+    # Default to True (consented) if no explicit record exists yet
+    ai_context_allowed = True if consent_record is None else bool(consent_record.get("automated_decision_support") is not False)
     agent_trace = _agentic_tool_workflow(message, user.role, patient, db, allow_patient_tools=(not patient or ai_context_allowed))
     if patient and agent_trace["tools_executed"]:
         uid_for_audit = getattr(user, "user_id", None) or getattr(user, "sub", None)

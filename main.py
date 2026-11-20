@@ -2014,31 +2014,24 @@ def _gemini_reply(prompt: str) -> Optional[str]:
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         return None
-    # Prioritize active fast production models first; avoid looping through deprecated names
-    preferred = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
-    models_to_try = [
-        preferred,
-        "gemini-1.5-flash",
-        "gemini-2.0-flash",
-    ]
-    models_to_try = [m for i, m in enumerate(models_to_try) if m and m not in models_to_try[:i]]
 
-    for model in models_to_try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 600}
-        }
-        req = URLRequest(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
-        try:
-            with urlopen(req, timeout=5) as response:
-                data = json.loads(response.read().decode("utf-8"))
-            candidate = data.get("candidates", [{}])[0]
-            text = "".join(part.get("text", "") for part in candidate.get("content", {}).get("parts", [])).strip()
-            if text:
-                return text
-        except Exception:
-            continue
+    # Use the fastest available active Gemini endpoint with a strict 3-second timeout
+    model = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview").strip()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 350}
+    }
+    req = URLRequest(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urlopen(req, timeout=3.0) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        candidate = data.get("candidates", [{}])[0]
+        text = "".join(part.get("text", "") for part in candidate.get("content", {}).get("parts", [])).strip()
+        if text:
+            return text
+    except Exception:
+        pass
     return None
 
 
